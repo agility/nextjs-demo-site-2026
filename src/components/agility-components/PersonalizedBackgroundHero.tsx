@@ -8,6 +8,7 @@ import { isFirstComponentInPage } from "@/lib/utils/pageZoneUtils"
 import type { UnloadedModuleProps } from "@agility/nextjs"
 import type { IPersonalizedBackgroundHero, IPersonalizedBackgroundHeroItem } from "@/lib/types/IPersonalizedBackgroundHero"
 import { getAudienceContentID } from "@/lib/utils/audienceRegionUtils"
+import { PersonalizationTracker } from "../analytics/PersonalizationTracker"
 
 export const PersonalizedBackgroundHero = async ({ module, languageCode, globalData, page }: UnloadedModuleProps) => {
 	const {
@@ -44,9 +45,14 @@ export const PersonalizedBackgroundHero = async ({ module, languageCode, globalD
 		backgroundImage,
 	}
 
+	// Track personalization state for analytics
+	let isPersonalized = false
+	let audienceName: string | null = null
+
 	// Check for audience-specific personalization
 	const searchParams = globalData?.["searchParams"]
 	if (searchParams) {
+		audienceName = typeof searchParams.audience === 'string' ? searchParams.audience : null
 		const audienceContentID = await getAudienceContentID(searchParams, languageCode)
 
 		if (audienceContentID) {
@@ -56,6 +62,7 @@ export const PersonalizedBackgroundHero = async ({ module, languageCode, globalD
 			)
 
 			if (personalizedContent) {
+				isPersonalized = true
 				// Use personalized content, falling back to default for any missing fields
 				selectedContent = {
 					heading: personalizedContent.fields.heading || heading,
@@ -74,6 +81,13 @@ export const PersonalizedBackgroundHero = async ({ module, languageCode, globalD
 
 	return (
 		<div className={clsx("relative z-0", isFirstComponent ? "-mt-36" : "mt-20")} data-agility-component={contentID}>
+			{/* Track personalization analytics */}
+			<PersonalizationTracker
+				audience={audienceName}
+				component="PersonalizedBackgroundHero"
+				contentId={contentID}
+				isPersonalized={isPersonalized}
+			/>
 			<Gradient
 				className="absolute inset-2 bottom-0 rounded-4xl ring-1 ring-black/5 dark:ring-white/10 ring-inset"
 				backgroundType={selectedContent.backgroundType}

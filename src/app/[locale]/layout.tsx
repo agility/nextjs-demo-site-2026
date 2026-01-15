@@ -17,6 +17,7 @@ import { getAISearchConfig } from '@/lib/cms-content/getAISearchConfig'
 import { locales, defaultLocale } from '@/lib/i18n/config'
 import { getSettings } from '@/lib/cms-content/getSettings'
 import { GoogleAnalytics } from '@next/third-parties/google'
+import { AnalyticsProvider } from '@/components/analytics'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -62,6 +63,11 @@ export default async function LocaleLayout({
 
       {/* Google Analytics */}
       {gaId && <GoogleAnalytics gaId={gaId} />}
+
+      {/* PostHog Analytics - Enhanced tracking for pageviews, engagement, and personalization */}
+      <Suspense fallback={null}>
+        <AnalyticsProvider locale={locale} />
+      </Suspense>
 
       {/* Preview indicator - normally not needed in production, but we show it here for illustration purposes */}
       <Suspense fallback={null}>

@@ -1,9 +1,11 @@
 "use client"
 
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import type { IAudience } from '@/lib/types/IAudience'
 import type { IRegion } from '@/lib/types/IRegion'
+import { analytics } from '@/lib/analytics'
+import { AnalyticsEvents } from '@/lib/analytics/events'
 
 /**
  * Custom hook for managing audience and region query parameters
@@ -48,14 +50,44 @@ export function useAudienceRegionParams(audiences: IAudience[] = [], regions: IR
     router.push(newUrl)
   }, [searchParams, router, pathname])
 
-  // Helper functions
+  // Track previous values for change detection
+  const prevAudienceRef = useRef<string | null>(selectedAudienceName)
+  const prevRegionRef = useRef<string | null>(selectedRegionName)
+
+  // Helper functions with analytics tracking
   const setAudience = useCallback((audience: IAudience | null) => {
-    updateParams(audience?.name || null, selectedRegionName)
-  }, [updateParams, selectedRegionName])
+    const newAudienceName = audience?.name || null
+
+    // Track audience change
+    if (newAudienceName !== prevAudienceRef.current && analytics.isReady()) {
+      analytics.track(AnalyticsEvents.AUDIENCE_CHANGED, {
+        personalizationType: 'audience',
+        audience: newAudienceName || undefined,
+        previousAudience: prevAudienceRef.current || undefined,
+        path: pathname,
+      })
+    }
+
+    prevAudienceRef.current = newAudienceName
+    updateParams(newAudienceName, selectedRegionName)
+  }, [updateParams, selectedRegionName, pathname])
 
   const setRegion = useCallback((region: IRegion | null) => {
-    updateParams(selectedAudienceName, region?.name || null)
-  }, [updateParams, selectedAudienceName])
+    const newRegionName = region?.name || null
+
+    // Track region change
+    if (newRegionName !== prevRegionRef.current && analytics.isReady()) {
+      analytics.track(AnalyticsEvents.REGION_CHANGED, {
+        personalizationType: 'region',
+        region: newRegionName || undefined,
+        previousRegion: prevRegionRef.current || undefined,
+        path: pathname,
+      })
+    }
+
+    prevRegionRef.current = newRegionName
+    updateParams(selectedAudienceName, newRegionName)
+  }, [updateParams, selectedAudienceName, pathname])
 
   const clearAll = useCallback(() => {
     updateParams(null, null)

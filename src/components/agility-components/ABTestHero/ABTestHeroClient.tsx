@@ -6,9 +6,8 @@ import { Container } from "../../container"
 import type { ImageField, URLField } from "@agility/nextjs"
 import { AgilityPic } from "@agility/nextjs"
 import { useEffect } from "react"
-import posthog from "posthog-js"
-import { getCookieName } from "@/lib/posthog/get-cookie-name"
-import Cookies from 'js-cookie';
+import { analytics } from "@/lib/analytics"
+import { AnalyticsEvents } from "@/lib/analytics/events"
 
 interface IHeroVariant {
 	variant: string
@@ -32,16 +31,25 @@ interface ABTestHeroClientProps {
  */
 export const ABTestHeroClient = ({ experimentKey, selectedVariant, userId, contentID }: ABTestHeroClientProps) => {
 	useEffect(() => {
+		// Track the experiment exposure using the analytics abstraction
+		if (!experimentKey || !selectedVariant) return
 
-		// Track the experiment exposure on the client side
-		if (posthog && posthog.__loaded && experimentKey && selectedVariant) {
-			posthog.capture("$feature_flag_called", {
-				$feature_flag: experimentKey,
-				$feature_flag_response: selectedVariant.variant,
+		const trackExposure = () => {
+			if (!analytics.isReady()) {
+				setTimeout(trackExposure, 100)
+				return
+			}
+
+			analytics.trackExperimentExposure({
+				experimentKey,
+				variant: selectedVariant.variant,
 				component: "ABTestHero",
-				contentID: contentID
+				contentId: contentID,
+				path: typeof window !== 'undefined' ? window.location.pathname : undefined,
 			})
 		}
+
+		trackExposure()
 	}, [experimentKey, selectedVariant, contentID])
 
 	if (!selectedVariant) {
@@ -92,15 +100,26 @@ export const ABTestHeroClient = ({ experimentKey, selectedVariant, userId, conte
 									target={callToAction.target}
 									data-agility-field="callToAction"
 									onClick={() => {
-										// Track CTA clicks for the experiment
-										if (posthog && posthog.__loaded) {
-											posthog.capture("ab_test_cta_click", {
-												experiment_key: experimentKey,
+										// Track CTA clicks for the experiment using analytics abstraction
+										if (analytics.isReady()) {
+											analytics.trackCTAClick({
+												ctaName: `ab_test_${experimentKey}_cta`,
+												ctaUrl: callToAction.href,
+												ctaText: callToAction.text,
+												component: "ABTestHero",
+												location: "hero",
+												path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+											})
+
+											// Also track as experiment interaction for A/B test analysis
+											analytics.track(AnalyticsEvents.EXPERIMENT_INTERACTION, {
+												experimentKey,
 												variant: selectedVariant.variant,
 												component: "ABTestHero",
-												contentID: contentID,
-												cta_text: callToAction.text,
-												cta_href: callToAction.href
+												contentId: contentID,
+												action: "cta_click",
+												ctaText: callToAction.text,
+												ctaHref: callToAction.href,
 											})
 										}
 									}}
