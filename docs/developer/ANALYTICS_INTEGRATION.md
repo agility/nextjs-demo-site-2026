@@ -130,6 +130,26 @@ These properties are set on users for segmentation:
 
 ## PostHog Dashboard Setup
 
+> **See Also:** [Analytics Dashboard Reference](./ANALYTICS_DASHBOARD.md) for the pre-built demo dashboard with all insights configured.
+
+### Demo Dashboard
+
+A pre-configured PostHog dashboard is available with 10 insights covering traffic, engagement, and personalization:
+
+**Dashboard URL:** https://us.posthog.com/project/194639/dashboard/1135430
+
+The dashboard includes:
+- Page Views Over Time
+- Top Pages by Traffic
+- Web Vitals Performance
+- Time on Page Milestones
+- Scroll Depth Distribution
+- Engagement Funnel
+- Personalization by Audience
+- Personalized Content Views by Component
+- Audience Segment Changes
+- Region Changes
+
 ### Creating a Conversion Funnel
 
 1. Go to PostHog > Insights > New Insight > Funnel
