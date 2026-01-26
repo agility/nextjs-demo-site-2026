@@ -196,24 +196,20 @@ The dashboard includes:
    - Go to Experiments > Select your experiment
    - View statistical significance and lift
 
-## Integrating with Other Tools
+## Switching Analytics Providers
 
-### Heat Mapping (Hotjar, FullStory, etc.)
+The analytics system is designed to be provider-agnostic. You can swap providers for both client-side and server-side tracking.
 
-The analytics events can trigger heat mapping recordings:
+### Graceful Degradation
 
-```typescript
-// Example: Trigger Hotjar event on scroll milestone
-analytics.track('scroll_milestone', {
-  depth: 50
-})
+If analytics credentials are not configured, the system gracefully degrades:
+- **Client-side**: PostHog won't initialize, tracking calls are silently skipped
+- **Server-side**: Feature flags return `undefined` (components use default variants), event tracking is skipped
+- **No errors**: The application works normally without analytics
 
-// In Hotjar, you can filter recordings by this event
-```
+### Client-Side Provider Swap
 
-### CDPs (Segment, RudderStack)
-
-To switch to Segment:
+To switch to a different client-side provider (e.g., Segment, Mixpanel):
 
 1. Create a new provider in `src/lib/analytics/segment-provider.ts`
 2. Implement the `AnalyticsProvider` interface
@@ -233,14 +229,65 @@ export const SegmentProvider: AnalyticsProvider = {
 }
 ```
 
+4. Update `src/instrumentation-client.ts` to initialize your provider
+
+### Server-Side Provider Swap
+
+Server-side analytics (for feature flags and server-side event tracking) is in `src/lib/posthog/`. Each file contains detailed comments showing alternative implementations:
+
+| File | Purpose | Alternatives |
+|------|---------|--------------|
+| `get-client.ts` | Analytics client initialization | GA4 Measurement Protocol, Mixpanel, Amplitude, Segment |
+| `track-event.ts` | Server-side event tracking | GA4, Mixpanel, Amplitude, Segment |
+| `get-feature-flag-variant.ts` | Feature flag evaluation | LaunchDarkly, Split.io, Statsig, GrowthBook |
+
+Example environment variables for different providers:
+
+```bash
+# PostHog (current)
+NEXT_PUBLIC_POSTHOG_KEY=phc_xxx
+NEXT_PUBLIC_POSTHOG_HOST=https://us.posthog.com
+
+# Google Analytics 4
+GOOGLE_ANALYTICS_MEASUREMENT_ID=G-XXXXXXXXXX
+GOOGLE_ANALYTICS_API_SECRET=xxx
+
+# Mixpanel
+MIXPANEL_TOKEN=xxx
+
+# LaunchDarkly (feature flags)
+LAUNCHDARKLY_SDK_KEY=sdk-xxx
+```
+
+## Integrating with Other Tools
+
+### Heat Mapping (Hotjar, FullStory, etc.)
+
+The analytics events can trigger heat mapping recordings:
+
+```typescript
+// Example: Trigger Hotjar event on scroll milestone
+analytics.track('scroll_milestone', {
+  depth: 50
+})
+
+// In Hotjar, you can filter recordings by this event
+```
+
 ### Google Analytics 4
 
-GA4 can receive the same events through Google Tag Manager:
+GA4 is supported in two ways:
 
-1. Set up GA4 in GTM
-2. Create triggers for custom events
-3. Map analytics events to GA4 events
-4. The event taxonomy is already GA4-compatible
+1. **Client-side (recommended)**: Use `@next/third-parties/google` in `layout.tsx`:
+   ```tsx
+   import { GoogleAnalytics } from '@next/third-parties/google'
+   // ...
+   {gaId && <GoogleAnalytics gaId={gaId} />}
+   ```
+
+2. **Server-side**: Use the Measurement Protocol (see `src/lib/posthog/track-event.ts` for example)
+
+The event taxonomy is already GA4-compatible.
 
 ## Adding Tracking to Components
 
@@ -363,6 +410,16 @@ In development, all analytics calls are logged to the console:
 
 ## Troubleshooting
 
+### Analytics Not Configured (Expected Behavior)
+
+If you haven't set up PostHog credentials, the system works normally:
+- No console errors about missing configuration
+- Feature flags return `undefined`, components use default variants
+- Event tracking calls are silently skipped
+- A/B tests show the control variant
+
+This is intentional - analytics is optional.
+
 ### Events Not Appearing
 
 1. Check PostHog is initialized (console log: "Initializing PostHog")
@@ -380,3 +437,10 @@ In development, all analytics calls are logged to the console:
 1. Check if page has scrollable content
 2. Verify EngagementTracker is mounted (check React DevTools)
 3. Ensure page visibility is working (check console logs)
+
+### Feature Flags Not Working
+
+1. Verify PostHog credentials are set
+2. Check the feature flag exists in PostHog dashboard
+3. Ensure the experiment key matches exactly
+4. Server logs will show: `Failed to get feature flag <key>: ...` if there's an error

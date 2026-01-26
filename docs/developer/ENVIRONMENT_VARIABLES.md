@@ -42,9 +42,18 @@ All environment variables are strongly typed in `/src/lib/types/env.d.ts`.
 - `AGILITY_SITEMAP` - Sitemap name
 - `AGILITY_FETCH_CACHE_DURATION` - Cache duration for fetch
 - `AGILITY_PATH_REVALIDATE_DURATION` - Revalidation duration
-- `NEXT_PUBLIC_POSTHOG_KEY` - PostHog API key
-- `NEXT_PUBLIC_POSTHOG_HOST` - PostHog host URL
+- `NEXT_PUBLIC_POSTHOG_KEY` - PostHog API key (optional - analytics disabled if not set)
+- `NEXT_PUBLIC_POSTHOG_HOST` - PostHog host URL (optional - analytics disabled if not set)
 - `NODE_ENV` - Node environment (strongly typed as 'development' | 'production' | 'test')
+
+### Optional Analytics Configuration
+
+The PostHog environment variables are optional. If not configured:
+- Analytics tracking is silently skipped
+- Feature flags return `undefined` (A/B tests use control variant)
+- The application works normally without any errors
+
+To enable analytics, set both `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST`.
 
 ### Adding New Environment Variables
 
