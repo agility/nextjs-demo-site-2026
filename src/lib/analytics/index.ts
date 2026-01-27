@@ -43,9 +43,10 @@ import type {
 } from './types'
 import { AnalyticsEvents } from './events'
 
-// Export types and events for use throughout the app
+// Export types, events, and utilities for use throughout the app
 export * from './types'
 export * from './events'
+export * from './agility-context'
 
 /**
  * Active analytics provider
@@ -237,11 +238,15 @@ export const analytics = {
 }
 
 /**
- * Get current URL parameters for tracking context
- * Extracts audience, region, locale, and UTM params
+ * Get current URL parameters and Agility CMS context for tracking
+ * Extracts audience, region, locale, UTM params, and Agility page/content IDs
  */
 export function getTrackingContext(): Partial<PageViewProperties> {
 	if (typeof window === 'undefined') return {}
+
+	// Import dynamically to avoid circular dependencies
+	const { getAgilityContext } = require('./agility-context')
+	const agilityContext = getAgilityContext()
 
 	const url = new URL(window.location.href)
 	const params = url.searchParams
@@ -249,6 +254,7 @@ export function getTrackingContext(): Partial<PageViewProperties> {
 	return {
 		path: url.pathname,
 		title: document.title,
+		locale: agilityContext.locale,
 		referrer: document.referrer || undefined,
 		audience: params.get('audience') || undefined,
 		region: params.get('region') || undefined,
@@ -257,6 +263,9 @@ export function getTrackingContext(): Partial<PageViewProperties> {
 		utmCampaign: params.get('utm_campaign') || undefined,
 		utmContent: params.get('utm_content') || undefined,
 		utmTerm: params.get('utm_term') || undefined,
+		// Agility CMS context
+		pageID: agilityContext.pageID,
+		contentIDs: agilityContext.contentIDs,
 	}
 }
 

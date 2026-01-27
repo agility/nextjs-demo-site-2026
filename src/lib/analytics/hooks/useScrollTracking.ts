@@ -76,8 +76,12 @@ export function useScrollTracking(options: ScrollTrackingOptions = {}) {
 			timeToReach,
 			path: context.path,
 			title: context.title,
+			locale: context.locale,
 			audience: context.audience,
 			region: context.region,
+			// Agility CMS context for page-level analytics
+			pageID: context.pageID,
+			contentIDs: context.contentIDs,
 		})
 
 		reachedMilestones.current.add(milestone)

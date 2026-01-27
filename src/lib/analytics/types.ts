@@ -59,6 +59,10 @@ export interface BaseEventProperties {
 	region?: string
 	/** Event timestamp */
 	timestamp?: string
+	/** Agility CMS Page ID - for grouping analytics by page */
+	pageID?: number
+	/** Agility CMS Content IDs on the page (dynamic content + components) */
+	contentIDs?: number[]
 	/** Allow additional custom properties */
 	[key: string]: unknown
 }
@@ -132,7 +136,7 @@ export interface PersonalizationProperties extends BaseEventProperties {
 	/** Component showing personalized content */
 	component?: string
 	/** Content ID of personalized content */
-	contentId?: number
+	contentID?: number
 }
 
 /**
@@ -146,7 +150,7 @@ export interface ExperimentProperties extends BaseEventProperties {
 	/** Component running the experiment */
 	component?: string
 	/** Content ID */
-	contentId?: number
+	contentID?: number
 }
 
 /**

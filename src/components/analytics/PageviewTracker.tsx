@@ -9,6 +9,7 @@
  * - Audience and region (personalization context)
  * - UTM parameters
  * - Page load performance
+ * - Agility CMS page ID and content IDs
  *
  * This component uses Next.js usePathname and useSearchParams hooks
  * to detect route changes and fire page view events.
@@ -16,7 +17,7 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { analytics, getTrackingContext } from '@/lib/analytics'
+import { analytics, getTrackingContext, getAgilityContext } from '@/lib/analytics'
 import type { PageViewProperties } from '@/lib/analytics/types'
 
 interface PageviewTrackerProps {
@@ -79,6 +80,13 @@ export function PageviewTracker({ locale }: PageviewTrackerProps) {
 			if (analytics.isReady()) {
 				// Add load time after page has loaded
 				properties.loadTime = getLoadTime()
+
+				// Add Agility CMS context (page ID and content IDs)
+				// This is done at track time to ensure DOM is fully rendered
+				const agilityContext = getAgilityContext()
+				properties.pageID = agilityContext.pageID
+				properties.contentIDs = agilityContext.contentIDs
+
 				analytics.page(pathname, properties)
 				lastTrackedPath.current = fullPath
 			} else {

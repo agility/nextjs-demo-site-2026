@@ -85,7 +85,7 @@ export const PersonalizedBackgroundHero = async ({ module, languageCode, globalD
 			<PersonalizationTracker
 				audience={audienceName}
 				component="PersonalizedBackgroundHero"
-				contentId={contentID}
+				contentID={contentID}
 				isPersonalized={isPersonalized}
 			/>
 			<Gradient

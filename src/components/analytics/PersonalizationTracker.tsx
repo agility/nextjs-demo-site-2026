@@ -12,7 +12,7 @@
  * <PersonalizationTracker
  *   audience="Enterprise"
  *   component="PersonalizedBackgroundHero"
- *   contentId={contentID}
+ *   contentID={contentID}
  *   isPersonalized={true}
  * />
  * ```
@@ -30,7 +30,7 @@ interface PersonalizationTrackerProps {
 	/** Component name for tracking */
 	component: string
 	/** Content ID from Agility CMS */
-	contentId?: number
+	contentID?: number
 	/** Whether personalized content is being shown (vs default) */
 	isPersonalized: boolean
 }
@@ -39,7 +39,7 @@ export function PersonalizationTracker({
 	audience,
 	region,
 	component,
-	contentId,
+	contentID,
 	isPersonalized,
 }: PersonalizationTrackerProps) {
 	const trackedRef = useRef(false)
@@ -75,7 +75,7 @@ export function PersonalizationTracker({
 				audience: audience || undefined,
 				region: region || undefined,
 				component,
-				contentId,
+				contentID,
 				path: typeof window !== 'undefined' ? window.location.pathname : undefined,
 			}
 
@@ -94,7 +94,7 @@ export function PersonalizationTracker({
 		}
 
 		trackPersonalization()
-	}, [audience, region, component, contentId, isPersonalized])
+	}, [audience, region, component, contentID, isPersonalized])
 
 	// This component doesn't render anything visible
 	return null

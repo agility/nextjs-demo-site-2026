@@ -12,6 +12,7 @@ The analytics system provides:
 - **Personalization tracking** - Audience/region-based content views
 - **A/B test tracking** - Experiment exposure and variant interactions
 - **Conversion tracking** - Goal completions and funnel analysis
+- **Agility CMS context** - Page IDs and component content IDs for CMS-level analytics
 
 ## Architecture
 
@@ -21,6 +22,7 @@ src/lib/analytics/
 ├── types.ts              # TypeScript interfaces
 ├── events.ts             # Event name constants
 ├── posthog-provider.ts   # PostHog implementation
+├── agility-context.ts    # Agility CMS ID extraction
 └── hooks/
     ├── useScrollTracking.ts
     └── useTimeOnPage.ts
@@ -33,6 +35,76 @@ src/components/analytics/
 ├── EngagementTracker.tsx # Engagement tracking
 └── PersonalizationTracker.tsx # Personalization tracking
 ```
+
+## Agility CMS Context
+
+All analytics events automatically include Agility CMS identifiers, enabling queries like:
+- "Show engagement metrics grouped by pageID"
+- "Compare scroll depth across different contentID values"
+- "Which pages have the highest time-on-page?"
+
+### Tracked IDs
+
+| Property | Source | Description |
+|----------|--------|-------------|
+| `pageID` | `data-agility-page` attribute | Agility CMS page ID |
+| `contentIDs` | `data-agility-dynamic-content` + `data-agility-component` attributes | Array of all content IDs on the page |
+| `contentID` | Nearest `data-agility-component` | Specific component for interaction events |
+| `locale` | URL path (e.g., `/en-us/...`) | Current language/locale |
+
+### Example PostHog Queries
+
+**Engagement by Page ID:**
+```sql
+SELECT pageID,
+       COUNT(*) as scroll_events,
+       AVG(depth) as avg_scroll_depth
+FROM events
+WHERE event = 'scroll_milestone'
+GROUP BY pageID
+ORDER BY scroll_events DESC
+```
+
+**Time on Page by Content:**
+```sql
+SELECT contentID,
+       MAX(seconds) as max_time_seconds,
+       COUNT(DISTINCT distinct_id) as unique_users
+FROM events
+WHERE event = 'time_milestone'
+GROUP BY contentID
+```
+
+**Engagement by Locale:**
+```sql
+SELECT locale,
+       COUNT(*) as page_views,
+       AVG(depth) as avg_scroll_depth
+FROM events
+WHERE event IN ('$pageview', 'scroll_milestone')
+GROUP BY locale
+```
+
+### Ensuring Components Have IDs
+
+All Agility CMS components should include the `data-agility-component` attribute:
+
+```tsx
+export const MyComponent = async ({ module, languageCode }: UnloadedModuleProps) => {
+  const { fields, contentID } = await getContentItem<IMyComponent>({
+    contentID: module.contentid,
+    languageCode,
+  })
+
+  return (
+    <section data-agility-component={contentID}>
+      {/* Component content */}
+    </section>
+  )
+}
+```
+
+For client components, pass the contentID as a prop and use it on the wrapper element.
 
 ## Quick Start
 
@@ -85,18 +157,18 @@ analytics.identify(userId, {
 
 | Event | Properties | Description |
 |-------|------------|-------------|
-| `page_viewed` | path, title, locale, audience, region, utmSource, etc. | Page navigation |
-| `cta_clicked` | ctaName, ctaUrl, ctaText, location, component | CTA interactions |
-| `scroll_milestone` | depth (25/50/75/100), timeToReach | Scroll engagement |
-| `time_milestone` | seconds (30/60/120/300), isVisible | Time engagement |
-| `outbound_link_clicked` | url, text, path | External link clicks |
+| `page_viewed` | path, title, locale, audience, region, pageID, contentIDs, utmSource, etc. | Page navigation |
+| `cta_clicked` | ctaName, ctaUrl, ctaText, location, component, pageID, contentID | CTA interactions |
+| `scroll_milestone` | depth (25/50/75/100), timeToReach, locale, pageID, contentIDs | Scroll engagement |
+| `time_milestone` | seconds (30/60/120/300), isVisible, locale, pageID, contentIDs | Time engagement |
+| `outbound_link_clicked` | url, text, path, locale, pageID, contentID | External link clicks |
 
 ### Personalization Events
 
 | Event | Properties | Description |
 |-------|------------|-------------|
 | `personalization_applied` | personalizationType, audience, region | Context detected |
-| `personalized_content_viewed` | component, contentId, audience, region | Personalized content shown |
+| `personalized_content_viewed` | component, contentID, audience, region | Personalized content shown |
 | `audience_changed` | audience, previousAudience, path | User changed audience |
 | `region_changed` | region, previousRegion, path | User changed region |
 
@@ -104,7 +176,7 @@ analytics.identify(userId, {
 
 | Event | Properties | Description |
 |-------|------------|-------------|
-| `experiment_exposure` | experimentKey, variant, component, contentId | Variant shown |
+| `experiment_exposure` | experimentKey, variant, component, contentID | Variant shown |
 | `experiment_interaction` | experimentKey, variant, action, component | User interacted with variant |
 
 ### Conversion Events
@@ -307,7 +379,7 @@ export const MyComponent = async ({ searchParams, languageCode }) => {
       <PersonalizationTracker
         audience={audience}
         component="MyComponent"
-        contentId={contentID}
+        contentID={contentID}
         isPersonalized={isPersonalized}
       />
       {/* Component content */}

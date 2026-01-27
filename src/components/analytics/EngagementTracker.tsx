@@ -15,7 +15,7 @@
 import { useEffect } from 'react'
 import { useScrollTracking } from '@/lib/analytics/hooks/useScrollTracking'
 import { useTimeOnPage } from '@/lib/analytics/hooks/useTimeOnPage'
-import { analytics, getTrackingContext } from '@/lib/analytics'
+import { analytics, getTrackingContext, getNearestContentID } from '@/lib/analytics'
 import { AnalyticsEvents } from '@/lib/analytics/events'
 
 interface EngagementTrackerProps {
@@ -66,13 +66,18 @@ export function EngagementTracker({
 			if (!href || !isExternalLink(href)) return
 
 			const context = getTrackingContext()
+			const contentID = getNearestContentID(link)
 
 			analytics.track(AnalyticsEvents.OUTBOUND_LINK_CLICKED, {
 				url: href,
 				text: link.textContent?.trim().substring(0, 100),
 				path: context.path,
+				locale: context.locale,
 				audience: context.audience,
 				region: context.region,
+				// Agility CMS context
+				pageID: context.pageID,
+				contentID, // The specific component this link is in
 			})
 		}
 

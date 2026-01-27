@@ -40,13 +40,23 @@ export const ABTestHeroClient = ({ experimentKey, selectedVariant, userId, conte
 				return
 			}
 
+			// Fire custom event for analytics abstraction layer
 			analytics.trackExperimentExposure({
 				experimentKey,
 				variant: selectedVariant.variant,
 				component: "ABTestHero",
-				contentId: contentID,
+				contentID: contentID,
 				path: typeof window !== 'undefined' ? window.location.pathname : undefined,
 			})
+
+			// Also fire native PostHog $feature_flag_called event for Experiments dashboard
+			// PostHog's built-in experiment analysis requires this specific event format
+			if (typeof window !== 'undefined' && (window as unknown as { posthog?: { capture: (event: string, properties: Record<string, unknown>) => void } }).posthog) {
+				(window as unknown as { posthog: { capture: (event: string, properties: Record<string, unknown>) => void } }).posthog.capture('$feature_flag_called', {
+					$feature_flag: experimentKey,
+					$feature_flag_response: selectedVariant.variant,
+				})
+			}
 		}
 
 		trackExposure()
@@ -116,7 +126,7 @@ export const ABTestHeroClient = ({ experimentKey, selectedVariant, userId, conte
 												experimentKey,
 												variant: selectedVariant.variant,
 												component: "ABTestHero",
-												contentId: contentID,
+												contentID: contentID,
 												action: "cta_click",
 												ctaText: callToAction.text,
 												ctaHref: callToAction.href,

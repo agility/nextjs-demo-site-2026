@@ -63,14 +63,14 @@ The Analytics Demo dashboard provides 10 insights across three categories:
 - **Event:** `personalization_applied` (breakdown by `audience`)
 - **Chart:** Bar
 - **Purpose:** Track when personalized content is served to different audience segments
-- **Properties:** `audience`, `component`, `contentId`, `path`
+- **Properties:** `audience`, `component`, `contentID`, `path`
 - **Use Case:** Measure personalization reach by segment (Enterprise, SMB, etc.)
 
 ### Personalized Content Views by Component
 - **Event:** `personalized_content_viewed` (breakdown by `component`)
 - **Chart:** Pie
 - **Purpose:** See which components are serving personalized content most often
-- **Properties:** `component`, `audience`, `region`, `contentId`
+- **Properties:** `component`, `audience`, `region`, `contentID`
 - **Use Case:** Identify most-used personalization touchpoints
 
 ### Audience Segment Changes
@@ -93,14 +93,26 @@ The Analytics Demo dashboard provides 10 insights across three categories:
 
 | Event Name | Trigger | Key Properties |
 |------------|---------|----------------|
-| `$pageview` | Page load/navigation | `$pathname`, `audience`, `region`, `locale` |
+| `$pageview` | Page load/navigation | `$pathname`, `audience`, `region`, `locale`, `pageID`, `contentIDs` |
 | `$web_vitals` | Performance measurement | LCP, FID, CLS metrics |
-| `time_milestone` | User stays on page | `seconds`, `path`, `title`, `isVisible` |
-| `scroll_milestone` | User scrolls page | `depth`, `timeToReach`, `path` |
-| `personalization_applied` | Personalized content detected | `audience`, `region`, `component`, `contentId` |
+| `time_milestone` | User stays on page | `seconds`, `path`, `title`, `isVisible`, `locale`, `pageID`, `contentIDs` |
+| `scroll_milestone` | User scrolls page | `depth`, `timeToReach`, `path`, `locale`, `pageID`, `contentIDs` |
+| `outbound_link_clicked` | External link click | `url`, `text`, `path`, `pageID`, `contentID` |
+| `personalization_applied` | Personalized content detected | `audience`, `region`, `component`, `contentID` |
 | `personalized_content_viewed` | User sees personalized content | `audience`, `region`, `component`, `isPersonalized` |
 | `audience_changed` | URL audience param changes | `audience`, `previousAudience`, `path` |
 | `region_changed` | URL region param changes | `region`, `previousRegion`, `path` |
+
+### Agility CMS Properties
+
+These properties are automatically included in events to enable CMS-level analytics:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `pageID` | number | Agility CMS page ID from `data-agility-page` attribute |
+| `contentIDs` | number[] | All content IDs on the page (dynamic content + component IDs) |
+| `contentID` | number | Specific component content ID for interaction events |
+| `locale` | string | Current language/locale extracted from URL path |
 
 ---
 
