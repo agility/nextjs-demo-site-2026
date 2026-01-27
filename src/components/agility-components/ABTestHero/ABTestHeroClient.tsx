@@ -64,6 +64,12 @@ export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTe
 	// Find the control variant (default)
 	const controlVariant = allVariants.find(v => v.variant === "control") || allVariants[0]
 
+	// Determine loading state:
+	// - Before mount: not loading (server render)
+	// - After mount but flag undefined: loading (waiting for PostHog)
+	// - After mount and flag defined: not loading
+	const isLoading = hasMounted && flagVariant === undefined
+
 	// Determine which variant to show
 	// - Before mount: always show control (matches server render)
 	// - After mount: show evaluated variant or control as fallback
@@ -102,17 +108,52 @@ export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTe
 	const { heading, description, callToAction, image, imagePosition = "right" } = selectedVariant
 	const isImageLeft = imagePosition === "left"
 
+	// Show skeleton while loading on client (after hydration, before flag evaluation)
+	if (isLoading) {
+		return (
+			<section
+				className="pt-20"
+				data-agility-component={contentID}
+				data-experiment-key={experimentKey}
+				data-variant="loading"
+				data-evaluated="false"
+			>
+				<Container>
+					<div className="grid gap-8 lg:gap-16 lg:grid-cols-2 lg:items-center grid-rows-[auto_1fr]">
+						{/* Content Skeleton */}
+						<div className="order-2 lg:order-1 space-y-6">
+							{/* Heading skeleton */}
+							<div className="h-12 sm:h-14 md:h-16 bg-gray-200 dark:bg-gray-700 rounded-lg w-4/5 animate-pulse" />
+							{/* Description skeleton */}
+							<div className="space-y-3">
+								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-full animate-pulse" />
+								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse" />
+								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-4/6 animate-pulse" />
+							</div>
+							{/* Button skeleton */}
+							<div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-full w-48 animate-pulse" />
+						</div>
+						{/* Image Skeleton */}
+						<div className="order-1 lg:order-2">
+							<div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 rounded-2xl animate-pulse" />
+						</div>
+					</div>
+				</Container>
+			</section>
+		)
+	}
+
 	return (
 		<section
 			className={clsx(
-				"pt-20 transition-opacity duration-200",
-				// Subtle fade-in when variant changes to minimize perceived flicker
-				hasMounted ? "opacity-100" : "opacity-95"
+				"pt-20 transition-opacity duration-300",
+				// Fade in when variant is ready
+				hasMounted && flagVariant !== undefined ? "opacity-100" : "opacity-100"
 			)}
 			data-agility-component={contentID}
 			data-experiment-key={experimentKey}
 			data-variant={selectedVariant.variant}
-			data-evaluated={hasMounted ? "true" : "false"}
+			data-evaluated={hasMounted && flagVariant !== undefined ? "true" : "false"}
 		>
 			<Container>
 				<div className={clsx(

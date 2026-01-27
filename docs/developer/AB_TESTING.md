@@ -197,18 +197,24 @@ Create a funnel insight:
 
 ### Flicker Mitigation
 
-The component includes subtle flicker mitigation:
+The component uses a skeleton loader to eliminate flicker:
 
 ```tsx
-<section
-  className={clsx(
-    "transition-opacity duration-200",
-    hasEvaluated ? "opacity-100" : "opacity-95"
-  )}
->
+// Show skeleton while waiting for PostHog to evaluate the flag
+if (isLoading) {
+  return <SkeletonHero />
+}
+
+return <ActualHero variant={selectedVariant} />
 ```
 
-This creates a barely perceptible fade rather than a jarring content swap.
+The loading flow is:
+1. **Server** → renders control variant (fast initial paint)
+2. **Client hydrates** → still shows control (no hydration mismatch)
+3. **After mount** → shows skeleton while PostHog evaluates flag
+4. **Flag evaluated** → shows correct variant
+
+For **returning users**, PostHog caches flags in localStorage, so they skip the skeleton and see their variant immediately.
 
 ## Troubleshooting
 
