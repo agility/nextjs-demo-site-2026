@@ -1,9 +1,7 @@
 import { getContentItem } from "@/lib/cms/getContentItem"
 import { getContentList } from "@/lib/cms/getContentList"
 import type { ImageField, UnloadedModuleProps, URLField } from "@agility/nextjs"
-import { ABTestHeroDynamic } from "./ABTestHeroDynamic"
-import { ABTestHeroLoading } from "./ABTestHeroLoading"
-import { Suspense } from "react"
+import { ABTestHeroClient } from "./ABTestHeroClient"
 
 interface IHeroVariant {
 	variant: string
@@ -27,15 +25,30 @@ interface IHero {
 }
 
 /**
- * AB Test Hero component with Partial Prerendering (PPR) support.
- * This component fetches content from Agility CMS and uses Suspense boundaries
- * to enable PPR - the static shell is prerendered while dynamic AB testing
- * logic is handled server-side within the Suspense boundary.
+ * AB Test Hero - Server Component
  *
- * Uses the experimentKey field to identify the experiment in PostHog.
+ * Fetches all variant content from Agility CMS and passes to client component
+ * for PostHog feature flag evaluation.
+ *
+ * Architecture: Client-Side A/B Testing
+ * =====================================
+ * This component uses client-side feature flag evaluation via PostHog's
+ * useFeatureFlagVariantKey hook. See ABTestHeroClient.tsx for the rationale.
+ *
+ * Benefits:
+ * - Routes remain static (no dynamic opt-out from cookies/headers)
+ * - Works with PPR and static generation
+ * - Uses PostHog's standard React pattern
+ * - Automatic $feature_flag_called event tracking
+ *
+ * How it works:
+ * 1. Server fetches all variants from CMS (this component)
+ * 2. Server renders control variant in initial HTML
+ * 3. Client evaluates feature flag and swaps variant if needed
+ * 4. PostHog automatically tracks the experiment exposure
  *
  * @param {UnloadedModuleProps} props - The properties passed to the component.
- * @returns {JSX.Element} The rendered hero section with AB testing and PPR.
+ * @returns {JSX.Element} The rendered hero section with A/B testing.
  */
 export const ABTestHero = async ({ module, languageCode }: UnloadedModuleProps) => {
 	const {
@@ -60,8 +73,8 @@ export const ABTestHero = async ({ module, languageCode }: UnloadedModuleProps) 
 		}
 	}
 
-	// Create the default variant from the main content
-	const defaultVariant: IHeroVariant = {
+	// Create the control variant from the main content
+	const controlVariant: IHeroVariant = {
 		variant: "control",
 		heading,
 		description,
@@ -70,16 +83,14 @@ export const ABTestHero = async ({ module, languageCode }: UnloadedModuleProps) 
 		imagePosition,
 	}
 
-	// Combine default with variants
-	const allVariants = [defaultVariant, ...variantsList]
+	// Combine control with other variants
+	const allVariants = [controlVariant, ...variantsList]
 
 	return (
-		<Suspense fallback={<ABTestHeroLoading contentID={contentID} />}>
-			<ABTestHeroDynamic
-				experimentKey={experimentKey}
-				allVariants={allVariants}
-				contentID={contentID}
-			/>
-		</Suspense>
+		<ABTestHeroClient
+			experimentKey={experimentKey}
+			allVariants={allVariants}
+			contentID={contentID}
+		/>
 	)
 }

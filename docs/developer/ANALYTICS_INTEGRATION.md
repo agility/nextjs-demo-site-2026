@@ -256,17 +256,21 @@ The dashboard includes:
 
 ### A/B Test Analysis
 
+> **See Also:** [A/B Testing Implementation Guide](./AB_TESTING.md) for complete implementation details, architecture decisions, and setup instructions.
+
+A/B testing uses **client-side feature flag evaluation** with PostHog's `useFeatureFlagVariantKey` hook. This keeps routes static while PostHog handles experiment tracking automatically.
+
 1. **Experiment Performance**
    - Create a Funnel insight
-   - Step 1: `experiment_exposure` where `experimentKey = your-experiment`
-   - Step 2: `experiment_interaction`
+   - Step 1: `$feature_flag_called` where `$feature_flag = your-experiment`
+   - Step 2: `cta_clicked` or `experiment_interaction`
    - Step 3: `conversion`
-   - Breakdown by: `variant`
+   - Breakdown by: `$feature_flag_response` (variant)
 
-2. **Using PostHog Experiments**
+2. **Using PostHog Experiments Dashboard**
    - PostHog has built-in experiment analysis
    - Go to Experiments > Select your experiment
-   - View statistical significance and lift
+   - View statistical significance, conversion rates, and lift
 
 ## Switching Analytics Providers
 

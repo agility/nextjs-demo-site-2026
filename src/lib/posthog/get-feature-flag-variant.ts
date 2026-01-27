@@ -1,8 +1,20 @@
 /**
  * Server-Side Feature Flag Evaluation
  *
- * Evaluate feature flags server-side for A/B testing and feature rollouts.
+ * Evaluate feature flags server-side for feature rollouts and gradual deployments.
  * Returns the variant key/value, or undefined if not configured/error.
+ *
+ * IMPORTANT: For A/B testing experiments, prefer client-side evaluation using
+ * PostHog's useFeatureFlagVariantKey hook. See docs/developer/AB_TESTING.md.
+ *
+ * Server-side evaluation is best for:
+ * - Feature rollouts (boolean flags)
+ * - Server-only features (API behavior, backend logic)
+ * - Cases where you MUST evaluate before rendering (rare)
+ *
+ * Trade-off: Using cookies()/headers() in Next.js App Router opts routes into
+ * dynamic rendering, which impacts performance. Client-side evaluation keeps
+ * routes static while PostHog handles user identification automatically.
  *
  * ALTERNATIVE IMPLEMENTATIONS:
  * ============================

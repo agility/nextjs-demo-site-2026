@@ -22,6 +22,7 @@ Codebase-specific documentation for developers working with this Next.js applica
 
 - **[Analytics Integration Guide](./ANALYTICS_INTEGRATION.md)** - Platform-agnostic analytics architecture with PostHog implementation
 - **[Analytics Dashboard Reference](./ANALYTICS_DASHBOARD.md)** - PostHog dashboard insights and event reference
+- **[A/B Testing Guide](./AB_TESTING.md)** - Client-side A/B testing with PostHog Experiments
 
 ## Quick Links
 

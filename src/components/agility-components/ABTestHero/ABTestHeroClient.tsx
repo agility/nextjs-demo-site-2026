@@ -1,11 +1,12 @@
 "use client"
 
 import clsx from "clsx"
+import { useState, useEffect } from "react"
+import { useFeatureFlagVariantKey } from "posthog-js/react"
 import { Button } from "../../button"
 import { Container } from "../../container"
 import type { ImageField, URLField } from "@agility/nextjs"
 import { AgilityPic } from "@agility/nextjs"
-import { useEffect } from "react"
 import { analytics } from "@/lib/analytics"
 import { AnalyticsEvents } from "@/lib/analytics/events"
 
@@ -20,19 +21,64 @@ interface IHeroVariant {
 
 interface ABTestHeroClientProps {
 	experimentKey: string
-	selectedVariant: IHeroVariant
-	userId: string
+	allVariants: IHeroVariant[]
 	contentID: number
 }
 
 /**
- * Client component that renders the selected hero variant from server-side AB testing.
- * This component receives the pre-selected variant and handles client-side analytics tracking.
+ * Client-side A/B Test Hero component using PostHog's useFeatureFlagVariantKey hook.
+ *
+ * Architecture Decision: Client-Side Only A/B Testing
+ * ====================================================
+ *
+ * We intentionally use client-side feature flag evaluation rather than server-side for these reasons:
+ *
+ * 1. **Static Route Optimization**: Using cookies() or headers() in Next.js App Router opts the
+ *    entire route into dynamic rendering, defeating static generation and PPR benefits.
+ *
+ * 2. **Performance**: Server renders the control variant immediately (fast initial paint),
+ *    then client swaps to the correct variant if needed.
+ *
+ * 3. **Simplicity**: Uses PostHog's standard React hooks which automatically handle:
+ *    - $feature_flag_called event tracking
+ *    - User identification via PostHog's distinct_id
+ *    - Flag evaluation caching
+ *
+ * 4. **Flicker Mitigation**:
+ *    - ~50% of users (control group) see no change at all
+ *    - Treatment group users see a brief transition (CSS fade)
+ *    - PostHog caches flags in localStorage for returning users
+ *
+ * Trade-off: First-time treatment group users may see a brief content swap.
+ * This is acceptable given the performance benefits of keeping routes static.
  */
-export const ABTestHeroClient = ({ experimentKey, selectedVariant, userId, contentID }: ABTestHeroClientProps) => {
+export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTestHeroClientProps) => {
+	// Use PostHog's hook - automatically tracks $feature_flag_called
+	const flagVariant = useFeatureFlagVariantKey(experimentKey)
+
+	// Track mount state to avoid hydration mismatch
+	// Server and initial client render MUST match (both show control)
+	// Only after hydration do we switch to the evaluated variant
+	const [hasMounted, setHasMounted] = useState(false)
+
+	// Find the control variant (default)
+	const controlVariant = allVariants.find(v => v.variant === "control") || allVariants[0]
+
+	// Determine which variant to show
+	// - Before mount: always show control (matches server render)
+	// - After mount: show evaluated variant or control as fallback
+	const selectedVariant = hasMounted && flagVariant
+		? (allVariants.find(v => v.variant === flagVariant) || controlVariant)
+		: controlVariant
+
+	// Track when component has mounted to enable variant switching
 	useEffect(() => {
-		// Track the experiment exposure using the analytics abstraction
-		if (!experimentKey || !selectedVariant) return
+		setHasMounted(true)
+	}, [])
+
+	// Track exposure with our analytics abstraction (in addition to PostHog's automatic tracking)
+	useEffect(() => {
+		if (!experimentKey || !hasMounted || flagVariant === undefined) return
 
 		const trackExposure = () => {
 			if (!analytics.isReady()) {
@@ -48,33 +94,25 @@ export const ABTestHeroClient = ({ experimentKey, selectedVariant, userId, conte
 				contentID: contentID,
 				path: typeof window !== 'undefined' ? window.location.pathname : undefined,
 			})
-
-			// Also fire native PostHog $feature_flag_called event for Experiments dashboard
-			// PostHog's built-in experiment analysis requires this specific event format
-			if (typeof window !== 'undefined' && (window as unknown as { posthog?: { capture: (event: string, properties: Record<string, unknown>) => void } }).posthog) {
-				(window as unknown as { posthog: { capture: (event: string, properties: Record<string, unknown>) => void } }).posthog.capture('$feature_flag_called', {
-					$feature_flag: experimentKey,
-					$feature_flag_response: selectedVariant.variant,
-				})
-			}
 		}
 
 		trackExposure()
-	}, [experimentKey, selectedVariant, contentID])
-
-	if (!selectedVariant) {
-		return null
-	}
+	}, [experimentKey, hasMounted, flagVariant, selectedVariant.variant, contentID])
 
 	const { heading, description, callToAction, image, imagePosition = "right" } = selectedVariant
 	const isImageLeft = imagePosition === "left"
 
 	return (
 		<section
-			className="pt-20"
+			className={clsx(
+				"pt-20 transition-opacity duration-200",
+				// Subtle fade-in when variant changes to minimize perceived flicker
+				hasMounted ? "opacity-100" : "opacity-95"
+			)}
 			data-agility-component={contentID}
 			data-experiment-key={experimentKey}
 			data-variant={selectedVariant.variant}
+			data-evaluated={hasMounted ? "true" : "false"}
 		>
 			<Container>
 				<div className={clsx(
