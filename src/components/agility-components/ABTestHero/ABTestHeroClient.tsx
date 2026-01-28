@@ -87,11 +87,16 @@ export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTe
 		if (!experimentKey || !hasMounted || flagVariant === undefined) return
 
 		let retryTimeout: NodeJS.Timeout | null = null
+		const MAX_RETRY_ATTEMPTS = 50 // 5 seconds max (50 * 100ms)
 
-		const trackExposure = () => {
+		const trackExposure = (attempts = 0) => {
 			if (!analytics.isReady()) {
+				if (attempts >= MAX_RETRY_ATTEMPTS) {
+					// Give up after max attempts - analytics may not be configured
+					return
+				}
 				// Store the timeout ID so we can clear it on unmount
-				retryTimeout = setTimeout(trackExposure, 100)
+				retryTimeout = setTimeout(() => trackExposure(attempts + 1), 100)
 				return
 			}
 
@@ -157,8 +162,8 @@ export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTe
 		<section
 			className={clsx(
 				"pt-20 transition-opacity duration-300",
-				// Fade in when variant is ready
-				hasMounted && flagVariant !== undefined ? "opacity-100" : "opacity-100"
+				// Fade in when variant is ready (slight fade effect for smoother transition)
+				hasMounted && flagVariant !== undefined ? "opacity-100" : "opacity-95"
 			)}
 			data-agility-component={contentID}
 			data-experiment-key={experimentKey}

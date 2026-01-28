@@ -1,5 +1,11 @@
 import posthog from 'posthog-js'
 
+// Extend window type
+declare global {
+	interface Window {
+		posthog?: typeof posthog
+	}
+}
 
 // Set up performance monitoring
 performance.mark('app-init')
@@ -13,6 +19,8 @@ if (postHogKey && postHogHost) {
 		api_host: postHogHost,
 		defaults: '2025-05-24'
 	});
+	// Expose on window for provider access
+	window.posthog = posthog
 }
 
 // Initialize analytics

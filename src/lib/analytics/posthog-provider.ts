@@ -22,20 +22,66 @@ import type {
 } from './types'
 
 /**
+ * Queue for events that arrive before PostHog is ready
+ */
+type QueuedEvent =
+	| { type: 'identify'; userId: string; traits?: UserTraits }
+	| { type: 'track'; event: string; properties?: EventProperties }
+	| { type: 'page'; name: string; properties?: PageViewProperties }
+	| { type: 'group'; groupId: string; traits?: GroupTraits }
+
+const eventQueue: QueuedEvent[] = []
+let isFlushingQueue = false
+
+/**
  * Get the PostHog client instance
  * Returns null on server side or if PostHog isn't initialized
  */
 function getPostHog() {
 	if (typeof window === 'undefined') return null
+	// Access the posthog instance exposed on window by instrumentation-client.ts
+	const posthog = window.posthog
+	return posthog?.__loaded ? posthog : null
+}
 
-	// Dynamic import to avoid SSR issues
-	try {
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
-		const posthog = require('posthog-js').default
-		return posthog?.__loaded ? posthog : null
-	} catch {
-		return null
+/**
+ * Wait for PostHog to be ready and flush queued events
+ */
+function waitForPostHogAndFlush() {
+	if (isFlushingQueue) return
+	isFlushingQueue = true
+
+	const checkAndFlush = () => {
+		const posthog = getPostHog()
+		if (posthog && eventQueue.length > 0) {
+			console.log(`[Analytics] Flushing ${eventQueue.length} queued events to PostHog`)
+			while (eventQueue.length > 0) {
+				const event = eventQueue.shift()!
+				switch (event.type) {
+					case 'identify':
+						PostHogProvider.identify(event.userId, event.traits)
+						break
+					case 'track':
+						PostHogProvider.track(event.event, event.properties)
+						break
+					case 'page':
+						PostHogProvider.page(event.name, event.properties)
+						break
+					case 'group':
+						PostHogProvider.group(event.groupId, event.traits)
+						break
+				}
+			}
+			isFlushingQueue = false
+		} else if (!posthog) {
+			// Retry in 100ms
+			setTimeout(checkAndFlush, 100)
+		} else {
+			isFlushingQueue = false
+		}
 	}
+
+	checkAndFlush()
 }
 
 /**
@@ -52,7 +98,12 @@ export const PostHogProvider: AnalyticsProvider = {
 
 	identify(userId: string, traits?: UserTraits) {
 		const posthog = getPostHog()
-		if (!posthog) return
+		if (!posthog) {
+			// Queue the event and wait for PostHog to be ready
+			eventQueue.push({ type: 'identify', userId, traits })
+			waitForPostHogAndFlush()
+			return
+		}
 
 		// PostHog identify sets the distinct_id and user properties
 		posthog.identify(userId, {
@@ -69,7 +120,12 @@ export const PostHogProvider: AnalyticsProvider = {
 
 	track(event: string, properties?: EventProperties) {
 		const posthog = getPostHog()
-		if (!posthog) return
+		if (!posthog) {
+			// Queue the event and wait for PostHog to be ready
+			eventQueue.push({ type: 'track', event, properties })
+			waitForPostHogAndFlush()
+			return
+		}
 
 		// Add timestamp if not provided
 		const enrichedProperties = {
@@ -82,7 +138,12 @@ export const PostHogProvider: AnalyticsProvider = {
 
 	page(name: string, properties?: PageViewProperties) {
 		const posthog = getPostHog()
-		if (!posthog) return
+		if (!posthog) {
+			// Queue the event and wait for PostHog to be ready
+			eventQueue.push({ type: 'page', name, properties })
+			waitForPostHogAndFlush()
+			return
+		}
 
 		// PostHog doesn't have a dedicated page() method like Segment
 		// We use capture with $pageview event and custom properties
@@ -104,12 +165,20 @@ export const PostHogProvider: AnalyticsProvider = {
 			utm_term: properties?.utmTerm,
 			// Performance
 			load_time_ms: properties?.loadTime,
+			// Agility CMS context
+			pageID: properties?.pageID,
+			contentIDs: properties?.contentIDs,
 		})
 	},
 
 	group(groupId: string, traits?: GroupTraits) {
 		const posthog = getPostHog()
-		if (!posthog) return
+		if (!posthog) {
+			// Queue the event and wait for PostHog to be ready
+			eventQueue.push({ type: 'group', groupId, traits })
+			waitForPostHogAndFlush()
+			return
+		}
 
 		// PostHog uses group() for B2B company-level tracking
 		posthog.group('company', groupId, traits)
