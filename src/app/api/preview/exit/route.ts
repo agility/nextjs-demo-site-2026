@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 	if (ContentID) {
 		const dynamicPath = await getDynamicPageURL({ contentID: Number(ContentID), preview: false, slug: slug || undefined });
 		if (dynamicPath) {
-			url = dynamicPath;
+			url = new URL(dynamicPath, request.nextUrl.origin).toString();
 		}
 	}
 
