@@ -27,23 +27,31 @@ interface PageviewTrackerProps {
 
 /**
  * Get page load performance metrics
+ * Only valid for the initial full page load, not SPA navigations
  */
-function getLoadTime(): number | undefined {
+function getLoadTime(isInitialLoad: boolean): number | undefined {
+	// Only return load time for the initial page load
+	// For SPA navigations, the navigation timing is stale
+	if (!isInitialLoad) return undefined
 	if (typeof window === 'undefined' || !window.performance) return undefined
 
 	const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
 
-	if (navigation) {
+	if (navigation && navigation.loadEventEnd > 0) {
 		return Math.round(navigation.loadEventEnd - navigation.startTime)
 	}
 
 	return undefined
 }
 
+// Track if this is the first page view (initial full page load)
+let isFirstPageView = true
+
 export function PageviewTracker({ locale }: PageviewTrackerProps) {
 	const pathname = usePathname()
 	const searchParams = useSearchParams()
 	const lastTrackedPath = useRef<string>('')
+	const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
 	useEffect(() => {
 		// Build the full path including search params for uniqueness check
@@ -75,11 +83,13 @@ export function PageviewTracker({ locale }: PageviewTrackerProps) {
 			timestamp: new Date().toISOString(),
 		}
 
-		// Track the page view
+		// Track the page view with retry logic that properly cleans up
 		const trackPageView = () => {
 			if (analytics.isReady()) {
-				// Add load time after page has loaded
-				properties.loadTime = getLoadTime()
+				// Add load time only for initial full page load (not SPA navigations)
+				properties.loadTime = getLoadTime(isFirstPageView)
+				// Mark that we've had the first page view
+				isFirstPageView = false
 
 				// Add Agility CMS context (page ID and content IDs)
 				// This is done at track time to ensure DOM is fully rendered
@@ -91,14 +101,22 @@ export function PageviewTracker({ locale }: PageviewTrackerProps) {
 				lastTrackedPath.current = fullPath
 			} else {
 				// Retry after a short delay if analytics isn't ready
-				setTimeout(trackPageView, 100)
+				// Store the timeout ID so we can clear it on unmount
+				retryTimeoutRef.current = setTimeout(trackPageView, 100)
 			}
 		}
 
 		// Slight delay to ensure title is set and performance metrics are available
 		const timeoutId = setTimeout(trackPageView, 100)
 
-		return () => clearTimeout(timeoutId)
+		return () => {
+			clearTimeout(timeoutId)
+			// Also clear any retry timeout that might be pending
+			if (retryTimeoutRef.current) {
+				clearTimeout(retryTimeoutRef.current)
+				retryTimeoutRef.current = null
+			}
+		}
 	}, [pathname, searchParams, locale])
 
 	// This component doesn't render anything

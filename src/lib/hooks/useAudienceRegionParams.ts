@@ -90,16 +90,57 @@ export function useAudienceRegionParams(audiences: IAudience[] = [], regions: IR
   }, [updateParams, selectedAudienceName, pathname])
 
   const clearAll = useCallback(() => {
+    // Track audience clear if there was an audience
+    if (prevAudienceRef.current && analytics.isReady()) {
+      analytics.track(AnalyticsEvents.AUDIENCE_CHANGED, {
+        personalizationType: 'audience',
+        audience: undefined,
+        previousAudience: prevAudienceRef.current,
+        path: pathname,
+      })
+    }
+    // Track region clear if there was a region
+    if (prevRegionRef.current && analytics.isReady()) {
+      analytics.track(AnalyticsEvents.REGION_CHANGED, {
+        personalizationType: 'region',
+        region: undefined,
+        previousRegion: prevRegionRef.current,
+        path: pathname,
+      })
+    }
+    // Update refs
+    prevAudienceRef.current = null
+    prevRegionRef.current = null
     updateParams(null, null)
-  }, [updateParams])
+  }, [updateParams, pathname])
 
   const clearAudience = useCallback(() => {
+    // Track audience clear if there was an audience
+    if (prevAudienceRef.current && analytics.isReady()) {
+      analytics.track(AnalyticsEvents.AUDIENCE_CHANGED, {
+        personalizationType: 'audience',
+        audience: undefined,
+        previousAudience: prevAudienceRef.current,
+        path: pathname,
+      })
+    }
+    prevAudienceRef.current = null
     updateParams(null, selectedRegionName)
-  }, [updateParams, selectedRegionName])
+  }, [updateParams, selectedRegionName, pathname])
 
   const clearRegion = useCallback(() => {
+    // Track region clear if there was a region
+    if (prevRegionRef.current && analytics.isReady()) {
+      analytics.track(AnalyticsEvents.REGION_CHANGED, {
+        personalizationType: 'region',
+        region: undefined,
+        previousRegion: prevRegionRef.current,
+        path: pathname,
+      })
+    }
+    prevRegionRef.current = null
     updateParams(selectedAudienceName, null)
-  }, [updateParams, selectedAudienceName])
+  }, [updateParams, selectedAudienceName, pathname])
 
   // Computed values
   const hasSelection = selectedAudience !== null || selectedRegion !== null

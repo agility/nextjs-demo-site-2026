@@ -128,26 +128,3 @@ export const PostHogProvider: AnalyticsProvider = {
 		return posthog !== null
 	},
 }
-
-/**
- * Helper to wait for PostHog to be ready
- * Useful for components that need to track on mount
- */
-export function waitForPostHog(callback: () => void, maxAttempts = 10): void {
-	let attempts = 0
-
-	const check = () => {
-		attempts++
-		const posthog = getPostHog()
-
-		if (posthog) {
-			callback()
-		} else if (attempts < maxAttempts) {
-			setTimeout(check, 100)
-		} else {
-			console.warn('[Analytics] PostHog not available after max attempts')
-		}
-	}
-
-	check()
-}

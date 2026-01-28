@@ -86,9 +86,12 @@ export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTe
 	useEffect(() => {
 		if (!experimentKey || !hasMounted || flagVariant === undefined) return
 
+		let retryTimeout: NodeJS.Timeout | null = null
+
 		const trackExposure = () => {
 			if (!analytics.isReady()) {
-				setTimeout(trackExposure, 100)
+				// Store the timeout ID so we can clear it on unmount
+				retryTimeout = setTimeout(trackExposure, 100)
 				return
 			}
 
@@ -103,6 +106,13 @@ export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTe
 		}
 
 		trackExposure()
+
+		return () => {
+			// Clear any retry timeout that might be pending
+			if (retryTimeout) {
+				clearTimeout(retryTimeout)
+			}
+		}
 	}, [experimentKey, hasMounted, flagVariant, selectedVariant.variant, contentID])
 
 	const { heading, description, callToAction, image, imagePosition = "right" } = selectedVariant

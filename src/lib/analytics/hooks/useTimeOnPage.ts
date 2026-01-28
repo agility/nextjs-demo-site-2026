@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { analytics, getTrackingContext } from '@/lib/analytics'
 import { TimeMilestones, type TimeMilestone } from '@/lib/analytics/events'
 
@@ -38,16 +38,23 @@ export function useTimeOnPage(options: TimeOnPageOptions = {}) {
 	} = options
 
 	const pathname = usePathname()
+	const searchParams = useSearchParams()
 	const reachedMilestones = useRef<Set<number>>(new Set())
 	const timeOnPage = useRef<number>(0)
 	const isVisible = useRef<boolean>(true)
 	const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-	// Reset on route change
+	// Build a full path key including search params for reset detection
+	const fullPath = searchParams.toString()
+		? `${pathname}?${searchParams.toString()}`
+		: pathname
+
+	// Reset on route change (including search param changes)
+	// This matches PageviewTracker's behavior of firing new pageviews on search param changes
 	useEffect(() => {
 		reachedMilestones.current = new Set()
 		timeOnPage.current = 0
-	}, [pathname])
+	}, [fullPath])
 
 	// Track milestone
 	const trackMilestone = useCallback((seconds: number) => {

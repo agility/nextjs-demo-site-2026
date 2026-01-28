@@ -14,7 +14,7 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { analytics, getTrackingContext } from '@/lib/analytics'
 import { ScrollMilestones, type ScrollMilestone } from '@/lib/analytics/events'
 
@@ -54,15 +54,22 @@ export function useScrollTracking(options: ScrollTrackingOptions = {}) {
 	} = options
 
 	const pathname = usePathname()
+	const searchParams = useSearchParams()
 	const reachedMilestones = useRef<Set<ScrollMilestone>>(new Set())
 	const pageLoadTime = useRef<number>(Date.now())
 	const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
 
-	// Reset milestones on route change
+	// Build a full path key including search params for reset detection
+	const fullPath = searchParams.toString()
+		? `${pathname}?${searchParams.toString()}`
+		: pathname
+
+	// Reset milestones on route change (including search param changes)
+	// This matches PageviewTracker's behavior of firing new pageviews on search param changes
 	useEffect(() => {
 		reachedMilestones.current = new Set()
 		pageLoadTime.current = Date.now()
-	}, [pathname])
+	}, [fullPath])
 
 	// Track milestone
 	const trackMilestone = useCallback((milestone: ScrollMilestone) => {

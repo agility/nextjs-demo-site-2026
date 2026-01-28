@@ -75,6 +75,7 @@ export function UserIdentifier({ locale }: UserIdentifierProps) {
 	const searchParams = useSearchParams()
 	const identifiedRef = useRef(false)
 	const lastPropertiesRef = useRef<string>('')
+	const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
 	useEffect(() => {
 		// Get current audience and region from URL
@@ -97,7 +98,7 @@ export function UserIdentifier({ locale }: UserIdentifierProps) {
 		if (!identifiedRef.current || propertiesHash !== lastPropertiesRef.current) {
 			const userId = getOrCreateUserId()
 
-			// Wait for analytics to be ready
+			// Wait for analytics to be ready with proper cleanup
 			const identify = () => {
 				if (analytics.isReady()) {
 					analytics.identify(userId, traits)
@@ -105,11 +106,20 @@ export function UserIdentifier({ locale }: UserIdentifierProps) {
 					lastPropertiesRef.current = propertiesHash
 				} else {
 					// Retry after a short delay
-					setTimeout(identify, 100)
+					// Store the timeout ID so we can clear it on unmount
+					retryTimeoutRef.current = setTimeout(identify, 100)
 				}
 			}
 
 			identify()
+		}
+
+		return () => {
+			// Clear any retry timeout that might be pending
+			if (retryTimeoutRef.current) {
+				clearTimeout(retryTimeoutRef.current)
+				retryTimeoutRef.current = null
+			}
 		}
 	}, [searchParams, locale])
 
