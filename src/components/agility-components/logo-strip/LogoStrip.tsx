@@ -35,5 +35,9 @@ export const LogoStrip = async ({ module, languageCode }: UnloadedModuleProps) =
 		take: 20, // adjust as needed
 	})
 
-	return <LogoStripClient logos={logos.items} ctaDescription={ctaDescription} cta={cta} />
+	return (
+		<section data-agility-component={contentID}>
+			<LogoStripClient logos={logos.items} ctaDescription={ctaDescription} cta={cta} />
+		</section>
+	)
 }

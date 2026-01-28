@@ -21,6 +21,12 @@ Codebase-specific documentation for developers working with this Next.js applica
 - **[Audience & Region System](./developer/AUDIENCE_REGION_SYSTEM.md)** - Personalization system (query parameters for testing; edge-based detection in production)
 - **[View Transitions](./developer/VIEW_TRANSITIONS.md)** - Page transition implementation
 
+### Analytics & Experimentation
+
+- **[Analytics Integration Guide](./developer/ANALYTICS_INTEGRATION.md)** - Platform-agnostic analytics architecture with PostHog
+- **[Analytics Dashboard Reference](./developer/ANALYTICS_DASHBOARD.md)** - PostHog dashboard insights and event reference
+- **[A/B Testing Guide](./developer/AB_TESTING.md)** - Client-side A/B testing with PostHog Experiments
+
 ## Quick Links
 
 - **Official Agility CMS Docs**: [https://agilitycms.com/docs](https://agilitycms.com/docs)

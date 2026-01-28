@@ -54,5 +54,9 @@ export const PersonalizedLogoStrip = async ({ module, languageCode, globalData }
 	}
 
 
-	return <PersonalizedLogoStripClient customers={customers.items} ctaDescription={ctaDescription} cta={cta} />
+	return (
+		<section data-agility-component={contentID}>
+			<PersonalizedLogoStripClient customers={customers.items} ctaDescription={ctaDescription} cta={cta} />
+		</section>
+	)
 }

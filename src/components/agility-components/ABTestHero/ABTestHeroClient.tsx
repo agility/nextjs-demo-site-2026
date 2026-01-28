@@ -1,14 +1,14 @@
 "use client"
 
 import clsx from "clsx"
+import { useState, useEffect } from "react"
+import { useFeatureFlagVariantKey } from "posthog-js/react"
 import { Button } from "../../button"
 import { Container } from "../../container"
 import type { ImageField, URLField } from "@agility/nextjs"
 import { AgilityPic } from "@agility/nextjs"
-import { useEffect } from "react"
-import posthog from "posthog-js"
-import { getCookieName } from "@/lib/posthog/get-cookie-name"
-import Cookies from 'js-cookie';
+import { analytics } from "@/lib/analytics"
+import { AnalyticsEvents } from "@/lib/analytics/events"
 
 interface IHeroVariant {
 	variant: string
@@ -21,42 +21,154 @@ interface IHeroVariant {
 
 interface ABTestHeroClientProps {
 	experimentKey: string
-	selectedVariant: IHeroVariant
-	userId: string
+	allVariants: IHeroVariant[]
 	contentID: number
 }
 
 /**
- * Client component that renders the selected hero variant from server-side AB testing.
- * This component receives the pre-selected variant and handles client-side analytics tracking.
+ * Client-side A/B Test Hero component using PostHog's useFeatureFlagVariantKey hook.
+ *
+ * Architecture Decision: Client-Side Only A/B Testing
+ * ====================================================
+ *
+ * We intentionally use client-side feature flag evaluation rather than server-side for these reasons:
+ *
+ * 1. **Static Route Optimization**: Using cookies() or headers() in Next.js App Router opts the
+ *    entire route into dynamic rendering, defeating static generation and PPR benefits.
+ *
+ * 2. **Performance**: Server renders the control variant immediately (fast initial paint),
+ *    then client swaps to the correct variant if needed.
+ *
+ * 3. **Simplicity**: Uses PostHog's standard React hooks which automatically handle:
+ *    - $feature_flag_called event tracking
+ *    - User identification via PostHog's distinct_id
+ *    - Flag evaluation caching
+ *
+ * 4. **Flicker Mitigation**:
+ *    - ~50% of users (control group) see no change at all
+ *    - Treatment group users see a brief transition (CSS fade)
+ *    - PostHog caches flags in localStorage for returning users
+ *
+ * Trade-off: First-time treatment group users may see a brief content swap.
+ * This is acceptable given the performance benefits of keeping routes static.
  */
-export const ABTestHeroClient = ({ experimentKey, selectedVariant, userId, contentID }: ABTestHeroClientProps) => {
-	useEffect(() => {
+export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTestHeroClientProps) => {
+	// Use PostHog's hook - automatically tracks $feature_flag_called
+	const flagVariant = useFeatureFlagVariantKey(experimentKey)
 
-		// Track the experiment exposure on the client side
-		if (posthog && posthog.__loaded && experimentKey && selectedVariant) {
-			posthog.capture("$feature_flag_called", {
-				$feature_flag: experimentKey,
-				$feature_flag_response: selectedVariant.variant,
+	// Track mount state to avoid hydration mismatch
+	// Server and initial client render MUST match (both show control)
+	// Only after hydration do we switch to the evaluated variant
+	const [hasMounted, setHasMounted] = useState(false)
+
+	// Find the control variant (default)
+	const controlVariant = allVariants.find(v => v.variant === "control") || allVariants[0]
+
+	// Determine loading state:
+	// - Before mount: not loading (server render)
+	// - After mount but flag undefined: loading (waiting for PostHog)
+	// - After mount and flag defined: not loading
+	const isLoading = hasMounted && flagVariant === undefined
+
+	// Determine which variant to show
+	// - Before mount: always show control (matches server render)
+	// - After mount: show evaluated variant or control as fallback
+	const selectedVariant = hasMounted && flagVariant
+		? (allVariants.find(v => v.variant === flagVariant) || controlVariant)
+		: controlVariant
+
+	// Track when component has mounted to enable variant switching
+	useEffect(() => {
+		setHasMounted(true)
+	}, [])
+
+	// Track exposure with our analytics abstraction (in addition to PostHog's automatic tracking)
+	useEffect(() => {
+		if (!experimentKey || !hasMounted || flagVariant === undefined) return
+
+		let retryTimeout: NodeJS.Timeout | null = null
+		const MAX_RETRY_ATTEMPTS = 50 // 5 seconds max (50 * 100ms)
+
+		const trackExposure = (attempts = 0) => {
+			if (!analytics.isReady()) {
+				if (attempts >= MAX_RETRY_ATTEMPTS) {
+					// Give up after max attempts - analytics may not be configured
+					return
+				}
+				// Store the timeout ID so we can clear it on unmount
+				retryTimeout = setTimeout(() => trackExposure(attempts + 1), 100)
+				return
+			}
+
+			// Fire custom event for analytics abstraction layer
+			analytics.trackExperimentExposure({
+				experimentKey,
+				variant: selectedVariant.variant,
 				component: "ABTestHero",
-				contentID: contentID
+				contentID: contentID,
+				path: typeof window !== 'undefined' ? window.location.pathname : undefined,
 			})
 		}
-	}, [experimentKey, selectedVariant, contentID])
 
-	if (!selectedVariant) {
-		return null
-	}
+		trackExposure()
+
+		return () => {
+			// Clear any retry timeout that might be pending
+			if (retryTimeout) {
+				clearTimeout(retryTimeout)
+			}
+		}
+	}, [experimentKey, hasMounted, flagVariant, selectedVariant.variant, contentID])
 
 	const { heading, description, callToAction, image, imagePosition = "right" } = selectedVariant
 	const isImageLeft = imagePosition === "left"
 
+	// Show skeleton while loading on client (after hydration, before flag evaluation)
+	if (isLoading) {
+		return (
+			<section
+				className="pt-20"
+				data-agility-component={contentID}
+				data-experiment-key={experimentKey}
+				data-variant="loading"
+				data-evaluated="false"
+			>
+				<Container>
+					<div className="grid gap-8 lg:gap-16 lg:grid-cols-2 lg:items-center grid-rows-[auto_1fr]">
+						{/* Content Skeleton */}
+						<div className="order-2 lg:order-1 space-y-6">
+							{/* Heading skeleton */}
+							<div className="h-12 sm:h-14 md:h-16 bg-gray-200 dark:bg-gray-700 rounded-lg w-4/5 animate-pulse" />
+							{/* Description skeleton */}
+							<div className="space-y-3">
+								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-full animate-pulse" />
+								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse" />
+								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-4/6 animate-pulse" />
+							</div>
+							{/* Button skeleton */}
+							<div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-full w-48 animate-pulse" />
+						</div>
+						{/* Image Skeleton */}
+						<div className="order-1 lg:order-2">
+							<div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 rounded-2xl animate-pulse" />
+						</div>
+					</div>
+				</Container>
+			</section>
+		)
+	}
+
 	return (
 		<section
-			className="pt-20"
+			className={clsx(
+				"pt-20 transition-opacity duration-300",
+				// Fade in when variant is ready (slight fade effect for smoother transition)
+				hasMounted && flagVariant !== undefined ? "opacity-100" : "opacity-95"
+			)}
 			data-agility-component={contentID}
 			data-experiment-key={experimentKey}
 			data-variant={selectedVariant.variant}
+			data-evaluated={hasMounted && flagVariant !== undefined ? "true" : "false"}
 		>
 			<Container>
 				<div className={clsx(
@@ -92,15 +204,26 @@ export const ABTestHeroClient = ({ experimentKey, selectedVariant, userId, conte
 									target={callToAction.target}
 									data-agility-field="callToAction"
 									onClick={() => {
-										// Track CTA clicks for the experiment
-										if (posthog && posthog.__loaded) {
-											posthog.capture("ab_test_cta_click", {
-												experiment_key: experimentKey,
+										// Track CTA clicks for the experiment using analytics abstraction
+										if (analytics.isReady()) {
+											analytics.trackCTAClick({
+												ctaName: `ab_test_${experimentKey}_cta`,
+												ctaUrl: callToAction.href,
+												ctaText: callToAction.text,
+												component: "ABTestHero",
+												location: "hero",
+												path: typeof window !== 'undefined' ? window.location.pathname : undefined,
+											})
+
+											// Also track as experiment interaction for A/B test analysis
+											analytics.track(AnalyticsEvents.EXPERIMENT_INTERACTION, {
+												experimentKey,
 												variant: selectedVariant.variant,
 												component: "ABTestHero",
 												contentID: contentID,
-												cta_text: callToAction.text,
-												cta_href: callToAction.href
+												action: "cta_click",
+												ctaText: callToAction.text,
+												ctaHref: callToAction.href,
 											})
 										}
 									}}
