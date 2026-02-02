@@ -1,6 +1,20 @@
 # Documentation
 
-This repository contains documentation for the Agility CMS Next.js Demo Site, organized into two main categories:
+This repository contains documentation for the Agility CMS Next.js Demo Site, organized into two main categories.
+
+## 🎯 Get This Reference Implementation
+
+This is a fully-featured reference implementation showcasing Agility CMS capabilities. To get your own copy of this solution:
+
+**[Contact our sales team](https://agilitycms.com/contact-us/get-a-demo)** and we'll clone this solution for you and help you get set up with a POC (Proof of Concept).
+
+Our team will:
+- Clone the complete solution to your environment
+- Set up your Agility CMS instance with the content models
+- Help you configure the necessary integrations
+- Guide you through the setup process
+
+---
 
 ## 📚 Agility CMS Training
 

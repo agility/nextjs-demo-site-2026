@@ -4,6 +4,20 @@
 
 This guide provides codebase-specific information for developers working with this Next.js application. For generic Agility CMS development concepts, see the [official Agility CMS Training Guide](https://agilitycms.com/docs/training-guide).
 
+## 🎯 Get This Reference Implementation
+
+This is a fully-featured reference implementation showcasing Agility CMS capabilities. To get your own copy of this solution:
+
+**[Contact our sales team](https://agilitycms.com/contact-us/get-a-demo)** and we'll clone this solution for you and help you get set up with a POC (Proof of Concept).
+
+Our team will:
+- Clone the complete solution to your environment
+- Set up your Agility CMS instance with the content models
+- Help you configure the necessary integrations
+- Guide you through the setup process
+
+---
+
 ## Demo Site Overview
 
 The Demo Site is a comprehensive Next.js application powered by Agility CMS, showcasing modern headless CMS patterns, AI-powered search, internationalization, and advanced caching.

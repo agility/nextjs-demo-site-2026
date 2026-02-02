@@ -6,6 +6,20 @@
 
 This is an Agility CMS-powered Next.js demo site built with React 19, TypeScript, and Tailwind CSS. The site demonstrates modern web development practices with a headless CMS architecture with AI-powered search capabilities.
 
+## Get This Reference Implementation
+
+This is a fully-featured reference implementation showcasing Agility CMS capabilities. To get your own copy of this solution:
+
+**[Contact our sales team](https://agilitycms.com/contact-us/get-a-demo)** and we'll clone this solution for you and help you get set up with a POC (Proof of Concept).
+
+Our team will:
+- Clone the complete solution to your environment
+- Set up your Agility CMS instance with the content models
+- Help you configure the necessary integrations
+- Guide you through the setup process
+
+---
+
 ## Core Architecture
 
 **Headless CMS Pattern**: Content managed in Agility CMS → API fetching → Next.js rendering
