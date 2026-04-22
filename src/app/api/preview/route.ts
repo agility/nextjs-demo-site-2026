@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 	if (ContentID) {
 		const dynamicPath = await getDynamicPageURL({ contentID: Number(ContentID), preview: true, slug: slug || undefined });
 		if (dynamicPath) {
-			previewUrl = dynamicPath;
+			previewUrl = locale ? localizeUrl(dynamicPath, locale) : dynamicPath;
 		}
 
 	}

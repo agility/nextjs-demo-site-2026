@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 import agilitySDK from "@agility/content-fetch"
 import type { SitemapNode } from "@/lib/types/SitemapNode";
+import { publishPostToSocial } from "@/lib/social/publishPost";
 
 interface IRevalidateRequest {
 	state: string,
@@ -99,6 +100,19 @@ export async function POST(req: NextRequest) {
 				}
 			}
 		}
+		// --- Social media auto-publish for blog posts ---
+		if (
+			data.referenceName?.toLowerCase() === "posts" &&
+			data.contentID &&
+			data.languageCode
+		) {
+			// Fire-and-forget: don't block the webhook response
+			publishPostToSocial({
+				contentID: data.contentID,
+				languageCode: data.languageCode,
+			}).catch((err) => console.error("[social] Unexpected error:", err))
+		}
+
 	} else if (data.contentID === undefined && data.pageID === undefined) {
 		//if no content or page id is provided, it's for a URL redirection
 		//trigger the rebuild hook for netlify's rebuild...

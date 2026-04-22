@@ -23,7 +23,14 @@ type RequiredEnvVars = {
 }
 
 type OptionalEnvVars = {
-	// Add any optional environment variables here
+	// Social media auto-publishing (Hootsuite)
+	HOOTSUITE_ACCESS_TOKEN: string
+	HOOTSUITE_PROFILE_IDS: string
+	HOOTSUITE_API_URL: string
+	// Agility management API (for writing socialPublishedDate back to CMS)
+	AGILITY_API_MANAGEMENT_KEY: string
+	// Site URL for building post links
+	SITE_URL: string
 }
 
 type EnvVars = RequiredEnvVars & Partial<OptionalEnvVars>

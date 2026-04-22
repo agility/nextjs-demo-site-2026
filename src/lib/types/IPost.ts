@@ -12,4 +12,6 @@ export interface IPost {
 	category: ContentItem<ICategory>
 	author: ContentItem<IAuthor>
 	tags: ContentItem<ITag>[]
+	/** Set automatically when the post is published to social media. */
+	socialPublishedDate?: string
 }

@@ -1,4 +1,5 @@
 "use server";
+import { localizeUrl } from "@/lib/i18n/localizeUrl";
 import { getDynamicPageURL } from '@agility/nextjs/node';
 import { draftMode } from 'next/headers'
 import { NextRequest, NextResponse } from "next/server";
@@ -9,16 +10,20 @@ export async function GET(request: NextRequest) {
 
 	const slug = searchParams.get('slug');
 	const ContentID = searchParams.get('ContentID');
+	const locale = searchParams.get('locale') || searchParams.get('lang');
 
 	//disable draft/preview mode
 	(await draftMode()).disable()
 
-	let url = new URL(slug || '', request.nextUrl.origin).toString();
+	let path = slug || '/';
+	if (locale) path = localizeUrl(path, locale);
+	let url = new URL(path, request.nextUrl.origin).toString();
 
 	if (ContentID) {
 		const dynamicPath = await getDynamicPageURL({ contentID: Number(ContentID), preview: false, slug: slug || undefined });
 		if (dynamicPath) {
-			url = new URL(dynamicPath, request.nextUrl.origin).toString();
+			const localizedDynamic = locale ? localizeUrl(dynamicPath, locale) : dynamicPath;
+			url = new URL(localizedDynamic, request.nextUrl.origin).toString();
 		}
 	}
 
