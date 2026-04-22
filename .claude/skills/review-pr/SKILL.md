@@ -1,4 +1,5 @@
 ---
+name: review-pr
 description: Review code changes in a pull request. Use when the user asks to review a PR, check PR changes, look at a pull request, or mentions reviewing code for merge.
 ---
 

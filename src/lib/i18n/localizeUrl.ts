@@ -1,10 +1,11 @@
 import { type URLField } from "@agility/nextjs"
-import { type Locale, defaultLocale } from "./config"
+import { type Locale, defaultLocale, locales, getLocaleFromPathname, removeLocaleFromPathname } from "./config"
 
 /**
- * Localizes a URL based on the current locale
- * For default locale (en-us), returns the URL as is
- * For other locales, prefixes the URL with the locale
+ * Localizes a URL based on the current locale.
+ * For default locale (en-us), returns the URL without a locale prefix.
+ * For other locales, prefixes the URL with the locale.
+ * Idempotent: if the URL already starts with any known locale prefix, that prefix is stripped before the target locale is applied.
  */
 export function localizeUrl(url: string, locale: Locale): string {
   // Handle external URLs (don't localize)
@@ -18,9 +19,15 @@ export function localizeUrl(url: string, locale: Locale): string {
   }
 
   // Ensure URL starts with /
-  const normalizedUrl = url.startsWith('/') ? url : `/${url}`
+  let normalizedUrl = url.startsWith('/') ? url : `/${url}`
 
-  // For default locale, return URL as is
+  // Strip any existing locale prefix so we don't produce paths like /fr/fr/blog
+  const existingLocale = getLocaleFromPathname(normalizedUrl, locales)
+  if (existingLocale) {
+    normalizedUrl = removeLocaleFromPathname(normalizedUrl, existingLocale)
+  }
+
+  // For default locale, return URL without a prefix
   if (locale === defaultLocale) {
     return normalizedUrl
   }
