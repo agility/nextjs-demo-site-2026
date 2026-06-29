@@ -10,6 +10,9 @@ import { type SitemapNode } from "@/lib/types/SitemapNode"
 import { notFound } from "next/navigation"
 import InlineError from "@/components/InlineError"
 import { locales } from "@/lib/i18n/config"
+import { Container } from "@/components/container"
+import { Navbar } from "@/components/header/navbar"
+import { getHeaderContent } from "@/lib/cms-content/getHeaderContent"
 
 export const revalidate = 60
 export const runtime = "nodejs"
@@ -95,13 +98,33 @@ export default async function Page({ params }: PageProps) {
 	//get the search params from global data (since they are added in getAgilityPage)
 	const globalSearchParams = agilityData.globalData?.["searchParams"] || {};
 
+	// The header (with the language switcher) is rendered here so it can use the
+	// current page's sitemap node - pageID and, for dynamic pages, contentID -
+	// to resolve the equivalent page when switching locales.
+	const { locale } = await getAgilityContext((await params).locale);
+	const header = await getHeaderContent({ locale });
+	const node = agilityData.sitemapNode;
+
 	return (
-		<div data-agility-page={agilityData.page?.pageID} data-agility-dynamic-content={agilityData.sitemapNode.contentID}>
-			{AgilityPageTemplate ? (
-				<AgilityPageTemplate {...agilityData} searchParams={globalSearchParams} />
-			) : (
-				<InlineError message={`No template found for page template name: ${agilityData.pageTemplateName}`} />
+		<>
+			{header && (
+				<Container>
+					<Navbar
+						header={header}
+						locale={locale}
+						locales={locales}
+						pageID={node?.pageID}
+						contentID={node?.contentID}
+					/>
+				</Container>
 			)}
-		</div>
+			<div data-agility-page={agilityData.page?.pageID} data-agility-dynamic-content={agilityData.sitemapNode.contentID}>
+				{AgilityPageTemplate ? (
+					<AgilityPageTemplate {...agilityData} searchParams={globalSearchParams} />
+				) : (
+					<InlineError message={`No template found for page template name: ${agilityData.pageTemplateName}`} />
+				)}
+			</div>
+		</>
 	);
 }

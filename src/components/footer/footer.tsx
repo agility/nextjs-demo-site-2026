@@ -6,7 +6,6 @@ import { CallToAction } from './call-to-action'
 import { Copyright } from './copyright'
 import { Sitemap } from './sitemap'
 import { SocialLinks } from './social-links'
-import { LanguageToggle } from './language-toggle'
 import type { IFooter } from '@/lib/cms-content/getFooterContent'
 import type { ImageField } from '@agility/nextjs'
 
@@ -51,7 +50,6 @@ export const Footer = ({ footerData, logo, siteName, locale, locales, defaultLoc
 							</div>
 							<div className="flex">
 								<PlusGridItem className="flex items-center gap-8 p-3">
-									<LanguageToggle currentLocale={locale} locales={locales} defaultLocale={defaultLocale} />
 									<SocialLinks footerData={footerData} />
 								</PlusGridItem>
 							</div>

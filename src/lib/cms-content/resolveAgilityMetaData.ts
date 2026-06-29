@@ -5,6 +5,7 @@ import { getHeaderContent } from "./getHeaderContent"
 
 import ReactHtmlParser from "html-react-parser"
 import { getContentItem } from "@/lib/cms/getContentItem"
+import { decodeHtmlEntities } from "@/lib/utils"
 import type { JSX } from "react"
 
 interface Props {
@@ -104,7 +105,7 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent }: Pr
 
 	const metaData: Metadata = {
 		metadataBase: new URL('https://preview-tests-nov-2023.vercel.app'),
-		title: `${agilityData.sitemapNode?.title} | ${header?.siteName || "Company"}`,
+		title: `${decodeHtmlEntities(agilityData.sitemapNode?.title)} | ${header?.siteName || "Company"}`,
 		description: agilityData.page?.seo?.metaDescription,
 		keywords: agilityData.page?.seo?.metaKeywords,
 		openGraph: {

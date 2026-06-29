@@ -10,6 +10,7 @@ import { Subheading, Heading } from "../../text"
 import { Button } from "../../button"
 import { PostImage } from "./PostImage"
 import { localizeUrl } from "@/lib/i18n/localizeUrl"
+import { decodeHtmlEntities } from "@/lib/utils"
 
 const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProps) => {
 	if (!dynamicPageItem) {
@@ -30,6 +31,14 @@ const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProp
 	// content id
 	const contentID = dynamicPageItem.contentID
 
+	// CMS text can arrive HTML-entity-encoded (e.g. translated content). The
+	// rich-text Content field renders those natively, but plain-text fields
+	// (heading, image alt) must be decoded so entities don't show literally.
+	const heading = decodeHtmlEntities(post.heading)
+	const image = post.image
+		? { ...post.image, label: decodeHtmlEntities(post.image.label) }
+		: post.image
+
 	return (
 		<Container data-agility-component={contentID}>
 			<Subheading
@@ -43,7 +52,7 @@ const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProp
 				className="mt-2"
 				data-agility-field="heading"
 			>
-				{post.heading}
+				{heading}
 			</Heading>
 			<div className="mt-16 grid grid-cols-1 gap-8 pb-24 lg:grid-cols-[15rem_1fr] xl:grid-cols-[15rem_1fr_15rem]">
 				<div className="flex flex-wrap items-center gap-8 max-lg:justify-between lg:flex-col lg:items-start">
@@ -77,9 +86,9 @@ const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProp
 				</div>
 				<div className="text-gray-700 dark:text-gray-300">
 					<div className="max-w-2xl xl:mx-auto">
-						{post.image && (
+						{image && (
 							<PostImage
-								image={post.image}
+								image={image}
 								contentID={contentID}
 								data-agility-field="image"
 							/>
