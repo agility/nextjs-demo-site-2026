@@ -1,6 +1,3 @@
-import { Container } from '@/components/container'
-import { Navbar } from '@/components/header/navbar'
-
 import type React from 'react'
 
 import { getHeaderContent } from "@/lib/cms-content/getHeaderContent"
@@ -44,11 +41,8 @@ export default async function LocaleLayout({
 
   return (
     <>
-      <Container>
-        {header &&
-          <Navbar header={header} locale={locale} />
-        }
-      </Container>
+      {/* The Navbar (with the language switcher) is rendered by the page so it
+          can use the current page's sitemap node for locale switching. */}
       {children}
       {footer && header &&
         <Footer footerData={footer} logo={header.logo} siteName={header.siteName} locale={locale} locales={locales} defaultLocale={defaultLocale} />

@@ -5,6 +5,7 @@ import { getContentList } from "@/lib/cms/getContentList"
 import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
 import { type IPost } from "../types/IPost"
 import { defaultLocale, locales } from "@/lib/i18n/config"
+import { decodeHtmlEntities } from "@/lib/utils"
 
 export interface IPostMin {
 
@@ -77,6 +78,7 @@ export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsP
 			//this is a simple way to get an excerpt, but it may not be perfect
 			let excerpt = post.fields.content || ""
 			excerpt = excerpt.replace(/<[^>]*>/g, "") // remove HTML tags
+			excerpt = decodeHtmlEntities(excerpt) // decode entities to plain text
 			if (excerpt.length > 250) {
 				const lastPeriodIndex = excerpt.lastIndexOf(".", 250)
 				if (lastPeriodIndex !== -1) {
@@ -86,13 +88,17 @@ export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsP
 				}
 			}
 
+			const image = post.fields.image
+				? { ...post.fields.image, label: decodeHtmlEntities(post.fields.image.label) }
+				: post.fields.image
+
 			return {
 				contentID: post.contentID,
-				title: post.fields.heading,
+				title: decodeHtmlEntities(post.fields.heading),
 				date,
 				url,
 				category,
-				image: post.fields.image,
+				image,
 				author,
 				authorImage,
 				excerpt

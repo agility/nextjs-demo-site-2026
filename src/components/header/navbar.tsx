@@ -15,6 +15,7 @@ import { DesktopNav } from './desktop-nav'
 import { MobileNav } from './mobile-nav'
 import { BannerLink } from './banner-link'
 import { DarkModeToggle } from './dark-mode-toggle'
+import { LanguageSwitcher } from './language-switcher'
 import { useState } from 'react'
 import { localizeUrl, localizeUrlField } from '@/lib/i18n/localizeUrl'
 import { type Locale } from '@/lib/i18n/config'
@@ -31,9 +32,14 @@ const links = [
 interface Props {
   header: IHeaderData
   locale: string
+  /** All configured locales (passed from the server for the language switcher). */
+  locales: readonly string[]
+  /** Current page's sitemap node IDs, used by the language switcher. */
+  pageID?: number
+  contentID?: number
 }
 
-export function Navbar({ header, locale }: Props) {
+export function Navbar({ header, locale, locales, pageID, contentID }: Props) {
 
   const [showMobileNav, setShowMobileNav] = useState(false)
 
@@ -62,11 +68,13 @@ export function Navbar({ header, locale }: Props) {
               </div>
               <div className="flex items-center gap-4">
                 <DesktopNav links={header.links} locale={locale} />
-                <div className="hidden lg:flex">
+                <div className="hidden lg:flex items-center gap-2">
+                  <LanguageSwitcher currentLocale={locale} locales={locales} pageID={pageID} contentID={contentID} />
                   <DarkModeToggle />
                 </div>
               </div>
               <div className="flex items-center gap-2 lg:hidden">
+                <LanguageSwitcher currentLocale={locale} locales={locales} pageID={pageID} contentID={contentID} />
                 <DarkModeToggle />
                 <button
                   className="flex size-12 items-center justify-center self-center rounded-lg data-hover:bg-black/5 dark:data-hover:bg-white/5"
