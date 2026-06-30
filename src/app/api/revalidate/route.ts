@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
 				apiKey
 			})
 
-			const languageCode = process.env.AGILITY_LOCALES || "en-us"
+			//use the locale of the item that changed (NOT the full AGILITY_LOCALES
+			//list) so the node lookup and path resolution happen in the right locale
+			const defaultLocale = process.env.AGILITY_LOCALES?.split(",")[0] || "en-us"
+			const languageCode = data.languageCode || defaultLocale
 
 			//don't cache the sitemap here... we want to get the latest
 			agilityClient.config.fetchConfig = {
@@ -72,6 +75,15 @@ export async function POST(req: NextRequest) {
 					revalidatePath(path)
 					console.info("Revalidating path:", path)
 
+					//this content item backs a dynamic page, so its change can alter the
+					//sitemap (new node, changed slug, removed node). Clear the sitemap tags
+					//so the flat/nested sitemaps (and anything that resolves URLs from them,
+					//e.g. the locale switcher) pick up the change immediately.
+					const sitemapTagFlat = `agility-sitemap-flat-${data.languageCode}`
+					const sitemapTagNested = `agility-sitemap-nested-${data.languageCode}`
+					revalidateTag(sitemapTagFlat)
+					revalidateTag(sitemapTagNested)
+					console.info("Revalidating sitemap tags (dynamic page item):", sitemapTagFlat, sitemapTagNested)
 				}
 			}
 
