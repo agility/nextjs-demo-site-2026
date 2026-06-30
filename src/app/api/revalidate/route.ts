@@ -23,16 +23,35 @@ export async function POST(req: NextRequest) {
 	//parse the body
 	const data = await req.json() as IRevalidateRequest
 
+	//a publish makes content live; a delete/unpublish takes it offline. Both can
+	//change the sitemap (a node is added, renamed, or removed), so both need the
+	//sitemap cache cleared.
+	const isPublish = data.state === "Published"
+	const isRemoval = data.state === "Deleted" || data.state === "Unpublished"
 
-	//only process publish events
-	if (data.state === "Published") {
+	//helper: clear the flat + nested sitemap tags for a locale so anything that
+	//resolves URLs from the sitemap (the locale switcher, the blog listing,
+	//generateStaticParams) picks up the change immediately.
+	const revalidateSitemapTags = (locale?: string) => {
+		const sitemapTagFlat = `agility-sitemap-flat-${locale}`
+		const sitemapTagNested = `agility-sitemap-nested-${locale}`
+		revalidateTag(sitemapTagFlat)
+		revalidateTag(sitemapTagNested)
+		console.info("Revalidating sitemap tags:", sitemapTagFlat, sitemapTagNested)
+	}
+
+	const hasContentOrPage = !!data.referenceName || (data.pageID !== undefined && data.pageID > 0)
+
+	if ((isPublish || isRemoval) && hasContentOrPage) {
 
 		let sitemapFlat: {
 			[path: string]: SitemapNode
 		} = {}
 
-		//grab the sitemap flat so we can revalidate the full path if needed
-		if (data.contentID || data.pageID) {
+		//grab the sitemap flat so we can revalidate the full path if needed.
+		//only useful on publish: on a delete/unpublish the node is already gone
+		//from the sitemap, so there's nothing to look up.
+		if (isPublish && (data.contentID || data.pageID)) {
 			const apiKey = process.env.AGILITY_API_FETCH_KEY
 
 			const agilityClient = agilitySDK.getApi({
@@ -40,7 +59,10 @@ export async function POST(req: NextRequest) {
 				apiKey
 			})
 
-			const languageCode = process.env.AGILITY_LOCALES || "en-us"
+			//use the locale of the item that changed (NOT the full AGILITY_LOCALES
+			//list) so the node lookup and path resolution happen in the right locale
+			const defaultLocale = process.env.AGILITY_LOCALES?.split(",")[0] || "en-us"
+			const languageCode = data.languageCode || defaultLocale
 
 			//don't cache the sitemap here... we want to get the latest
 			agilityClient.config.fetchConfig = {
@@ -64,33 +86,38 @@ export async function POST(req: NextRequest) {
 
 			console.info("Revalidating content tags:", itemTag, listTag)
 
-			//grab the sitemap and check if this content is in there so we can revalidate a full path
-			if (sitemapFlat) {
+			if (isPublish) {
+				//grab the sitemap and check if this content is in there so we can revalidate a full path
 				const sitemapNode = Object.values(sitemapFlat).find(s => s.contentID === data.contentID)
 				if (sitemapNode) {
 					const path = sitemapNode.path
 					revalidatePath(path)
 					console.info("Revalidating path:", path)
 
+					//this content item backs a dynamic page, so its change can alter the
+					//sitemap (new node, changed slug). Clear the sitemap tags so the
+					//flat/nested sitemaps pick up the change immediately.
+					revalidateSitemapTags(data.languageCode)
 				}
+			} else {
+				//delete/unpublish: if this was a dynamic page item, its node has been
+				//removed from the sitemap. We can't look it up anymore, so clear the
+				//sitemap tags so the removed node drops out right away.
+				revalidateSitemapTags(data.languageCode)
 			}
 
 
 		} else if (data.pageID !== undefined && data.pageID > 0) {
-			//page change
+			//page change or removal
 			const pageTag = `agility-page-${data.pageID}-${data.languageCode}`
 			revalidateTag(pageTag)
 
+			//a page being added, changed, or removed always affects the sitemap
+			revalidateSitemapTags(data.languageCode)
 
-			//also revalidate the sitemaps
-			const sitemapTagFlat = `agility-sitemap-flat-${data.languageCode}`
-			const sitemapTagNested = `agility-sitemap-nested-${data.languageCode}`
-			revalidateTag(sitemapTagFlat)
-			revalidateTag(sitemapTagNested)
+			console.info("Revalidating page tag:", pageTag)
 
-			console.info("Revalidating page and sitemap tags:", pageTag, sitemapTagFlat, sitemapTagNested)
-
-			if (sitemapFlat) {
+			if (isPublish) {
 				const sitemapNode = Object.values(sitemapFlat).find(s => s.pageID === data.pageID)
 				if (sitemapNode) {
 					const path = sitemapNode.path
@@ -100,8 +127,10 @@ export async function POST(req: NextRequest) {
 				}
 			}
 		}
-		// --- Social media auto-publish for blog posts ---
+
+		// --- Social media auto-publish for blog posts (publish only) ---
 		if (
+			isPublish &&
 			data.referenceName?.toLowerCase() === "posts" &&
 			data.contentID &&
 			data.languageCode
