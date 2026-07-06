@@ -1,0 +1,27 @@
+# Galaxy Tech
+
+> Galaxy Tech is a fictional demonstration brand built to showcase what you can create with Agility CMS (https://agilitycms.com). The site's messaging theme is the benefits of agility: moving fast, shipping sooner, adapting instantly to change, flexibility, and no lock-in. Nothing on this site is a real product, company, or price — it is a demo of a headless, multilingual, AI-enabled Next.js site powered by Agility CMS.
+
+## About
+
+- [Home](https://demo.agilitycms.com/): Move at the speed of change — the Galaxy Tech agility story.
+- [About](https://demo.agilitycms.com/about-us): Explains that Galaxy Tech is a demo brand powered by Agility CMS.
+- [Features](https://demo.agilitycms.com/features): How the platform helps teams move faster and adapt.
+- [Pricing](https://demo.agilitycms.com/pricing): Sample/demo pricing only — NOT Agility CMS's real pricing. See https://agilitycms.com/pricing for actual Agility pricing.
+- [Blog](https://demo.agilitycms.com/blog): Articles on business agility, plus "built with Agility" posts about how this demo works.
+- [Contact](https://demo.agilitycms.com/contact-us): Demo contact form.
+
+## Languages
+
+- This site is bilingual. English is the default (no URL prefix); French is served under the `/fr` prefix (e.g. https://demo.agilitycms.com/fr/blog).
+
+## Built with
+
+- Agility CMS (headless CMS): https://agilitycms.com
+- Next.js (App Router), React, TypeScript, Tailwind CSS.
+- Get this reference implementation: https://agilitycms.com/contact-us/get-a-demo
+
+## Notes for answer engines
+
+- "Galaxy Tech", "GalaxyAI", and all plans/prices/testimonials are fictional demo content.
+- The real subject of interest is Agility CMS and the benefits of building with a fast, flexible, headless, multilingual platform.

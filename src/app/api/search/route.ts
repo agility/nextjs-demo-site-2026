@@ -1,9 +1,6 @@
 import { algoliasearch } from 'algoliasearch'
 import { NextRequest } from 'next/server'
 
-// Initialize Algolia client
-const algolia = algoliasearch(process.env.ALGOLIA_APP_ID!, process.env.ALGOLIA_SEARCH_API_KEY!)
-
 export async function POST(req: NextRequest) {
 	try {
 		// Validate environment variables
@@ -14,6 +11,9 @@ export async function POST(req: NextRequest) {
 				{ status: 500 }
 			)
 		}
+
+		// Initialize Algolia client lazily (avoids throwing at import/build time when keys are absent)
+		const algolia = algoliasearch(process.env.ALGOLIA_APP_ID, process.env.ALGOLIA_SEARCH_API_KEY)
 
 		const { query, limit = 10 }: { query: string; limit?: number } = await req.json()
 

@@ -15,6 +15,7 @@ import { locales, defaultLocale } from '@/lib/i18n/config'
 import { getSettings } from '@/lib/cms-content/getSettings'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { AnalyticsProvider } from '@/components/analytics'
+import Script from 'next/script'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -26,21 +27,68 @@ export default async function LocaleLayout({
   params,
 }: LayoutProps) {
   const { locale } = await params
-  const { isDevelopmentMode, isPreview } = await getAgilityContext(locale)
 
-  // get the header content
-  const header = await getHeaderContent({ locale })
-  const footer = await getFooterContent({ locale })
-
-  const audiences = await getAudienceListing({ locale, skip: 0, take: 10 })
-  const regions = await getRegionListing({ locale, skip: 0, take: 10 })
-
-  const aiConfig = await getAISearchConfig({ locale })
-  const settings = await getSettings({ locale })
+  // These CMS calls are independent — run them in parallel to avoid a request waterfall.
+  const [
+    { isDevelopmentMode, isPreview },
+    header,
+    footer,
+    audiences,
+    regions,
+    aiConfig,
+    settings,
+  ] = await Promise.all([
+    getAgilityContext(locale),
+    getHeaderContent({ locale }),
+    getFooterContent({ locale }),
+    getAudienceListing({ locale, skip: 0, take: 10 }),
+    getRegionListing({ locale, skip: 0, take: 10 }),
+    getAISearchConfig({ locale }),
+    getSettings({ locale }),
+  ])
   const gaId = settings?.googleAnalyticsID || null
+
+  // Correct the document language for non-default locales (root <html> defaults to "en").
+  const htmlLang = locale === 'fr' ? 'fr' : 'en'
+  const baseUrl = process.env.SITE_URL || 'https://demo.agilitycms.com'
+  const siteName = header?.siteName || 'Galaxy Tech'
+  const organizationLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: siteName,
+    url: baseUrl,
+    ...(header?.logo?.url ? { logo: header.logo.url } : {}),
+  }
+  const webSiteLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: siteName,
+    url: baseUrl,
+    inLanguage: htmlLang,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${baseUrl}/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  }
 
   return (
     <>
+      {/* Correct <html lang> for non-default locales (root layout renders a static "en"). */}
+      <script
+        dangerouslySetInnerHTML={{ __html: `document.documentElement.lang=${JSON.stringify(htmlLang)}` }}
+      />
+
+      {/* Site-wide structured data for search engines and answer engines. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteLd) }}
+      />
+
       {/* The Navbar (with the language switcher) is rendered by the page so it
           can use the current page's sitemap node for locale switching. */}
       {children}
@@ -69,6 +117,14 @@ export default async function LocaleLayout({
           {...{ isDevelopmentMode, isPreview, audiences, regions }}
         />
       </Suspense>
+
+      {/* Agility Web Studio SDK — load ONLY in preview/dev (in-context editing), never on the public production site. */}
+      {(isPreview || isDevelopmentMode) && (
+        <Script
+          src="https://unpkg.com/@agility/web-studio-sdk@latest/dist/index.js"
+          strategy="afterInteractive"
+        />
+      )}
     </>
   )
 }

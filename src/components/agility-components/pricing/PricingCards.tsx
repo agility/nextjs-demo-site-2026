@@ -81,8 +81,40 @@ export const PricingCards = async ({ module, languageCode, globalData }: Unloade
 			}
 		})
 
+	// Build Product JSON-LD structured data, one entry per pricing tier, omitting missing fields.
+	const baseUrl = process.env.SITE_URL || "https://demo.agilitycms.com"
+	const productsStructuredData = tiers.map((tier) => {
+		const offers: Record<string, any> = {
+			"@type": "Offer",
+			url: tier.ctaButton?.href || baseUrl,
+		}
+		if (tier.priceMonthly != null) {
+			offers.price = tier.priceMonthly
+		}
+		if (tier.currency) {
+			offers.priceCurrency = tier.currency
+		}
+
+		const product: Record<string, any> = {
+			"@context": "https://schema.org",
+			"@type": "Product",
+			offers,
+		}
+		if (tier.name) {
+			product.name = tier.name
+		}
+		if (tier.description) {
+			product.description = tier.description
+		}
+		return product
+	})
+
 	return (
 		<div className="relative py-24" data-agility-component={contentID}>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(productsStructuredData) }}
+			/>
 			<Gradient backgroundType='grays' className="absolute inset-x-2 top-48 bottom-0 rounded-4xl ring-1 ring-black/5 dark:ring-white/10 ring-inset" />
 			<Container className="relative">
 				{(title || subtitle) && (

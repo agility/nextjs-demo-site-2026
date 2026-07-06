@@ -37,8 +37,29 @@ export const FrequentlyAskedQuestions = async ({ module, languageCode }: Unloade
 
 	const faqs: IFAQ[] = faqsData.items.map((faq: ContentItem<IFAQ>) => faq.fields)
 
+	// Build FAQPage JSON-LD structured data. Answers may contain HTML, so strip tags.
+	const stripHtml = (html: string) =>
+		(html || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim()
+
+	const faqStructuredData = {
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		mainEntity: faqs.map((f) => ({
+			"@type": "Question",
+			name: f.question,
+			acceptedAnswer: {
+				"@type": "Answer",
+				text: stripHtml(f.answer),
+			},
+		})),
+	}
+
 	return (
 		<Container className='mt-20' data-agility-component={contentID}>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
+			/>
 			<section id="faqs" className="scroll-mt-8">
 				<Subheading className="text-center" data-agility-field="subheading">
 					{subheading}
