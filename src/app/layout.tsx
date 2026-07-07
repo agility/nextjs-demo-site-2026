@@ -3,7 +3,6 @@ import '@/styles/view-transitions.css'
 
 import type { Metadata } from 'next'
 import type React from 'react'
-import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: {
@@ -20,6 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="overflow-x-hidden" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://api.fontshare.com" />
+        <link rel="preconnect" href="https://cdn.agilitycms.com" />
         <link
           rel="stylesheet"
           href="https://api.fontshare.com/css?f%5B%5D=switzer@400,500,600,700&amp;display=swap"
@@ -48,8 +50,8 @@ export default function RootLayout({
         <main>
           {children}
         </main>
-        {/* Web Studio SDK */}
-        <Script src="https://unpkg.com/@agility/web-studio-sdk@latest/dist/index.js" />
+        {/* Agility Web Studio SDK is loaded (preview/dev only) from the [locale] layout,
+            so it never ships on the public production site. */}
       </body>
     </html>
   )

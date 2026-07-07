@@ -1,9 +1,32 @@
 'use client'
 
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
+
+// Lazy-load react-syntax-highlighter (and its prism style objects) so this large
+// dependency is code-split out of the initial docs bundle and only loaded when a
+// code block actually renders. Each theme is baked into its own dynamic wrapper
+// so the style imports stay out of the initial bundle too.
+const makeSyntaxHighlighter = (styleName: 'vscDarkPlus' | 'oneLight') =>
+	dynamic(
+		async () => {
+			const [{ Prism }, styles] = await Promise.all([
+				import('react-syntax-highlighter'),
+				import('react-syntax-highlighter/dist/esm/styles/prism'),
+			])
+			const style = styles[styleName]
+			const P = Prism as any
+			const Highlighter = (props: Record<string, any>) => (
+				<P style={style} {...props} />
+			)
+			Highlighter.displayName = `SyntaxHighlighter(${styleName})`
+			return Highlighter
+		},
+		{ ssr: false, loading: () => null }
+	)
+
+const DarkSyntaxHighlighter = makeSyntaxHighlighter('vscDarkPlus')
+const LightSyntaxHighlighter = makeSyntaxHighlighter('oneLight')
 
 interface CodeBlockProps {
 	language: string
@@ -34,9 +57,10 @@ export function CodeBlock({ language, children, className, ...props }: CodeBlock
 		return () => observer.disconnect()
 	}, [])
 
+	const SyntaxHighlighter = isDark ? DarkSyntaxHighlighter : LightSyntaxHighlighter
+
 	return (
 		<SyntaxHighlighter
-			style={isDark ? vscDarkPlus : oneLight}
 			language={language}
 			PreTag="div"
 			className={`rounded-lg !mt-4 !mb-4 ${className || ''}`}

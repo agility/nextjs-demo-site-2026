@@ -39,8 +39,47 @@ const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProp
 		? { ...post.image, label: decodeHtmlEntities(post.image.label) }
 		: post.image
 
+	// Build BlogPosting JSON-LD structured data, omitting any fields that are missing.
+	const baseUrl = process.env.SITE_URL || "https://demo.agilitycms.com"
+	const blogPostingStructuredData: Record<string, any> = {
+		"@context": "https://schema.org",
+		"@type": "BlogPosting",
+		publisher: {
+			"@type": "Organization",
+			name: "Galaxy Tech",
+		},
+	}
+	if (heading) {
+		blogPostingStructuredData.headline = heading
+	}
+	if (post.image?.url) {
+		blogPostingStructuredData.image = [post.image.url]
+	}
+	if (post.postDate) {
+		blogPostingStructuredData.datePublished = post.postDate
+	}
+	if (post.socialPublishedDate || post.postDate) {
+		blogPostingStructuredData.dateModified = post.socialPublishedDate || post.postDate
+	}
+	if (post.author?.fields?.name) {
+		blogPostingStructuredData.author = {
+			"@type": "Person",
+			name: post.author.fields.name,
+		}
+	}
+	if (post.slug) {
+		blogPostingStructuredData.mainEntityOfPage = {
+			"@type": "WebPage",
+			"@id": `${baseUrl}/blog/${post.slug}`,
+		}
+	}
+
 	return (
 		<Container data-agility-component={contentID}>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingStructuredData) }}
+			/>
 			<Subheading
 				className="mt-16"
 				data-agility-field="postDate"

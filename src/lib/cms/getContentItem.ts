@@ -1,6 +1,7 @@
 import { type ContentItemRequestParams } from "@agility/content-fetch/dist/methods/getContentItem"
 import getAgilitySDK from "@/lib/cms/getAgilitySDK"
 import { type ContentItem } from "@agility/content-fetch"
+import { env } from "@/lib/env"
 
 /**
  * Get a content item with caching information added.
@@ -14,7 +15,7 @@ export const getContentItem = async <T>(params: ContentItemRequestParams) => {
 	agilitySDK.config.fetchConfig = {
 		next: {
 			tags: [`agility-content-${params.contentID}-${params.languageCode || params.locale}`],
-			revalidate: 60,
+			revalidate: env.AGILITY_FETCH_CACHE_DURATION,
 		},
 	}
 

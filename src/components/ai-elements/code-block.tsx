@@ -3,13 +3,33 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CheckIcon, CopyIcon } from "lucide-react";
+import dynamic from "next/dynamic";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 import { createContext, useContext, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  oneDark,
-  oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
+
+// Lazy-load react-syntax-highlighter (and its prism style objects) so the large
+// highlighter/prism dependency is code-split out of the initial bundle and only
+// loaded when a code block actually renders. Each theme baked into its own
+// dynamic wrapper so the style import stays out of the initial bundle too.
+const makeSyntaxHighlighter = (styleName: "oneLight" | "oneDark") =>
+  dynamic(
+    async () => {
+      const [{ Prism }, styles] = await Promise.all([
+        import("react-syntax-highlighter"),
+        import("react-syntax-highlighter/dist/esm/styles/prism"),
+      ]);
+      const style = styles[styleName];
+      const Highlighter = (
+        props: ComponentProps<typeof Prism>
+      ) => <Prism style={style} {...props} />;
+      Highlighter.displayName = `SyntaxHighlighter(${styleName})`;
+      return Highlighter;
+    },
+    { ssr: false, loading: () => null }
+  );
+
+const LightSyntaxHighlighter = makeSyntaxHighlighter("oneLight");
+const DarkSyntaxHighlighter = makeSyntaxHighlighter("oneDark");
 
 type CodeBlockContextType = {
   code: string;
@@ -43,7 +63,7 @@ export const CodeBlock = ({
       {...props}
     >
       <div className="relative">
-        <SyntaxHighlighter
+        <LightSyntaxHighlighter
           className="overflow-hidden dark:hidden"
           codeTagProps={{
             className: "font-mono text-sm",
@@ -62,11 +82,10 @@ export const CodeBlock = ({
             minWidth: "2.5rem",
           }}
           showLineNumbers={showLineNumbers}
-          style={oneLight}
         >
           {code}
-        </SyntaxHighlighter>
-        <SyntaxHighlighter
+        </LightSyntaxHighlighter>
+        <DarkSyntaxHighlighter
           className="hidden overflow-hidden dark:block"
           codeTagProps={{
             className: "font-mono text-sm",
@@ -85,10 +104,9 @@ export const CodeBlock = ({
             minWidth: "2.5rem",
           }}
           showLineNumbers={showLineNumbers}
-          style={oneDark}
         >
           {code}
-        </SyntaxHighlighter>
+        </DarkSyntaxHighlighter>
         {children && (
           <div className="absolute top-2 right-2 flex items-center gap-2">
             {children}

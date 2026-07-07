@@ -1,20 +1,23 @@
 # Algolia-Crawler-Verif: F3977A0FB53DDD41
 
 # Demo Site Robots Configuration
-# This demo site only allows indexing of the /docs section
-# In a production Agility CMS site, you would typically allow indexing of all pages
-# and generate the sitemap from Agility CMS pages via getSitemapFlat()
+# The full site is now indexable by search engines and AI crawlers.
+# The sitemap is generated from Agility CMS pages (via getSitemapFlat()) plus the demo /docs section.
 
 sitemap: https://demo.agilitycms.com/sitemap.xml
 
 User-agent: *
-# Disallow all pages except /docs
-Disallow: /
+Allow: /
 
-# Allow robots.txt and sitemap.xml to be accessed by search engines (must come after Disallow)
-Allow: /robots.txt
-Allow: /sitemap.xml
+# Explicitly allow AI crawlers to index the full site
+User-agent: GPTBot
+Allow: /
 
-# Allow only the /docs section
-Allow: /docs
-Allow: /docs/
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /

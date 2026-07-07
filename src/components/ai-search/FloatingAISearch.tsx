@@ -2,9 +2,17 @@
 
 import { SparklesIcon } from '@heroicons/react/24/solid'
 import { motion } from 'motion/react'
+import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
-import AIModal from './AIModal'
 import type { IAISearchConfigData } from '@/lib/cms-content/getAISearchConfig'
+
+// Lazy-load the AI modal tree (@ai-sdk, ai, streamdown, react-syntax-highlighter, etc.)
+// so it is not shipped in the initial bundle on every page. It is only mounted
+// once the modal is opened.
+const AIModal = dynamic(() => import('./AIModal'), {
+  ssr: false,
+  loading: () => null,
+})
 
 interface FloatingAISearchProps {
   aiConfig: IAISearchConfigData
@@ -63,12 +71,14 @@ export default function FloatingAISearch({ aiConfig }: FloatingAISearchProps) {
         </motion.button>
       </motion.div>
 
-      {/* AI Modal */}
-      <AIModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        aiConfig={aiConfig}
-      />
+      {/* AI Modal - only mounted (and its heavy deps loaded) once opened */}
+      {isModalOpen && (
+        <AIModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          aiConfig={aiConfig}
+        />
+      )}
     </>
   )
 }

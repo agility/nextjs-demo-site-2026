@@ -1,70 +1,71 @@
+import { getSitemapFlat } from "@/lib/cms/getSitemapFlat";
 import { getAllDocFiles } from "@/lib/docs/getDocsFiles";
+import { locales, defaultLocale } from "@/lib/i18n/config";
 import type { MetadataRoute } from "next";
 
 /**
  * Demo Site Sitemap
  *
- * ⚠️ IMPORTANT: This sitemap is specific to this demo site and only includes /docs pages.
+ * This sitemap now covers BOTH:
+ * - All Agility CMS pages for every configured locale, generated via getSitemapFlat().
+ *   For the default locale, paths have no prefix; other locales are prefixed with /{locale}.
+ *   Folder nodes, redirects, and pages hidden from the sitemap are excluded.
+ * - The demo-site-specific /docs pages (generated from the local markdown files).
  *
- * In a REAL Agility CMS site:
- * - The /docs section would NOT exist (it's demo-site-specific)
- * - The sitemap would be generated from Agility CMS pages using getSitemapFlat()
- * - You would iterate through locales and generate entries for each page in the sitemap
- * - Example code (commented out below) shows the complete implementation for a real site
- *
- * Example for a real Agility CMS site:
- * ```typescript
- * import { getSitemapFlat } from "@/lib/cms/getSitemapFlat";
- * import { locales, defaultLocale } from "@/lib/i18n/config";
- *
- * export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
- *   const allSitemapEntries: MetadataRoute.Sitemap = [];
- *   const baseUrl = "https://your-site.com";
- *
- *   // Generate sitemap entries for each locale
- *   for (const locale of locales) {
- *     const sitemap = await getSitemapFlat({
- *       channelName: process.env.AGILITY_SITEMAP || "website",
- *       languageCode: locale
- *     });
- *
- *     if (!sitemap) continue;
- *
- *     const localeEntries = Object.keys(sitemap).filter((path) => {
- *       const node = sitemap[path];
- *       if (node.isFolder || node.redirect) {
- *         return false;
- *       }
- *
- *       if (!node.visible.sitemap) {
- *         return false;
- *       }
- *       return true;
- *     }).map((path, index) => {
- *       // For default locale, don't add locale prefix to URL
- *       const localizedPath = locale === defaultLocale ? path : `/${locale}${path}`;
- *
- *       return {
- *         url: index === 0 && path === "/" ? baseUrl : `${baseUrl}${localizedPath}`,
- *         lastModified: new Date(),
- *         changeFrequency: "daily" as const,
- *         priority: 1
- *       };
- *     });
- *
- *     allSitemapEntries.push(...localeEntries);
- *   }
- *
- *   return allSitemapEntries;
- * }
- * ```
+ * Note: the /docs section is specific to this demo site. In a real Agility CMS site
+ * the CMS pages portion (getSitemapFlat) would typically be the whole sitemap.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-	const baseUrl = "https://demo.agilitycms.com";
+	const baseUrl = process.env.SITE_URL || "https://demo.agilitycms.com";
+
+	// (a) Generate sitemap entries from Agility CMS pages, for each locale.
+	const cmsEntries: MetadataRoute.Sitemap = [];
+
+	for (const locale of locales) {
+		try {
+			const flatSitemap = await getSitemapFlat({
+				channelName: process.env.AGILITY_SITEMAP || "website",
+				languageCode: locale,
+			});
+
+			if (!flatSitemap) continue;
+
+			const localeEntries = Object.keys(flatSitemap)
+				.filter((path) => {
+					const node = flatSitemap[path];
+					if (node.isFolder || node.redirect) {
+						return false;
+					}
+					if (!node.visible?.sitemap) {
+						return false;
+					}
+					return true;
+				})
+				.map((path) => {
+					// For the default locale, don't add a locale prefix to the URL.
+					const localizedPath =
+						locale === defaultLocale ? path : `/${locale}${path}`;
+					const isHome = path === "/";
+
+					return {
+						url: isHome ? baseUrl : `${baseUrl}${localizedPath}`,
+						lastModified: new Date(),
+						changeFrequency: "daily" as const,
+						priority: isHome ? 1 : 0.8,
+					};
+				});
+
+			cmsEntries.push(...localeEntries);
+		} catch (error) {
+			// Guard each locale fetch so one failure doesn't break the whole sitemap.
+			console.error(`Failed to build sitemap for locale "${locale}":`, error);
+		}
+	}
+
+	// (b) Generate sitemap entries for documentation pages.
 	const docsEntries: MetadataRoute.Sitemap = [];
 	const addedPaths = new Set<string>();
 
-	// Generate sitemap entries for documentation pages
 	// This is demo-site-specific - in a real site, you'd generate from Agility CMS pages
 	const docFiles = getAllDocFiles();
 
@@ -111,5 +112,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		priority: 0.9
 	});
 
-	return docsEntries;
+	// Merge CMS page entries with the demo /docs entries.
+	return [...cmsEntries, ...docsEntries];
 }

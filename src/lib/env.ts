@@ -11,8 +11,6 @@ type RequiredEnvVars = {
 	AGILITY_SECURITY_KEY: string
 	AGILITY_LOCALES: string
 	AGILITY_SITEMAP: string
-	AGILITY_FETCH_CACHE_DURATION: string
-	AGILITY_PATH_REVALIDATE_DURATION: string
 
 	// PostHog
 	NEXT_PUBLIC_POSTHOG_KEY: string
@@ -31,6 +29,9 @@ type OptionalEnvVars = {
 	AGILITY_API_MANAGEMENT_KEY: string
 	// Site URL for building post links
 	SITE_URL: string
+	// Agility cache/revalidation durations (optional, default 60)
+	AGILITY_FETCH_CACHE_DURATION: string
+	AGILITY_PATH_REVALIDATE_DURATION: string
 }
 
 type EnvVars = RequiredEnvVars & Partial<OptionalEnvVars>
@@ -72,8 +73,6 @@ function getAllEnvVars(): EnvVars {
 		AGILITY_SECURITY_KEY: getRequiredEnvVar('AGILITY_SECURITY_KEY'),
 		AGILITY_LOCALES: getRequiredEnvVar('AGILITY_LOCALES'),
 		AGILITY_SITEMAP: getRequiredEnvVar('AGILITY_SITEMAP'),
-		AGILITY_FETCH_CACHE_DURATION: getRequiredEnvVar('AGILITY_FETCH_CACHE_DURATION'),
-		AGILITY_PATH_REVALIDATE_DURATION: getRequiredEnvVar('AGILITY_PATH_REVALIDATE_DURATION'),
 
 		// PostHog
 		NEXT_PUBLIC_POSTHOG_KEY: getRequiredEnvVar('NEXT_PUBLIC_POSTHOG_KEY'),
@@ -100,8 +99,8 @@ export const env = {
 	get AGILITY_SECURITY_KEY() { return getRequiredEnvVar('AGILITY_SECURITY_KEY') },
 	get AGILITY_LOCALES() { return getRequiredEnvVar('AGILITY_LOCALES') },
 	get AGILITY_SITEMAP() { return getRequiredEnvVar('AGILITY_SITEMAP') },
-	get AGILITY_FETCH_CACHE_DURATION() { return getRequiredEnvVar('AGILITY_FETCH_CACHE_DURATION') },
-	get AGILITY_PATH_REVALIDATE_DURATION() { return getRequiredEnvVar('AGILITY_PATH_REVALIDATE_DURATION') },
+	get AGILITY_FETCH_CACHE_DURATION() { return parseInt(process.env.AGILITY_FETCH_CACHE_DURATION || "60", 10) },
+	get AGILITY_PATH_REVALIDATE_DURATION() { return parseInt(process.env.AGILITY_PATH_REVALIDATE_DURATION || "60", 10) },
 	get NEXT_PUBLIC_POSTHOG_KEY() { return getRequiredEnvVar('NEXT_PUBLIC_POSTHOG_KEY') },
 	get NEXT_PUBLIC_POSTHOG_HOST() { return getRequiredEnvVar('NEXT_PUBLIC_POSTHOG_HOST') },
 	get NODE_ENV() { return getRequiredEnvVar('NODE_ENV') },
