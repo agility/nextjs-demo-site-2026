@@ -354,5 +354,5 @@ export function ResponsiveAspectImage({ image, className }: Props) {
 
 ## Related Resources
 
-- [Transforming Images Using Query Strings](/docs/editors/transforming-images-using-query-strings) - Learn about all available transformation parameters
+- [Transforming Images Using Query Strings](https://agilitycms.com/docs/editors/transforming-images-using-query-strings) - Learn about all available transformation parameters
 - [Agility CMS Image API](https://agilitycms.com/docs) - Full documentation on image optimization

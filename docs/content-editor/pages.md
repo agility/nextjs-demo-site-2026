@@ -1,6 +1,6 @@
 # Demo Site: Pages
 
-This guide documents the page structure of the Demo Site. For generic information about pages, see [Generic Guide: Pages Basics](../generic/05-pages-basics.md).
+This guide documents the page structure of the Demo Site. For generic information about pages, see [Generic Guide: Pages Basics](https://agilitycms.com/docs/training-guide/content-editor-pages-basics).
 
 ## Site Structure
 
@@ -126,9 +126,9 @@ The Demo Site supports **2 locales**:
 ## Editing Pages
 
 For generic information about:
-- Creating pages: See [Generic Guide: Pages Basics](../generic/05-pages-basics.md)
-- Editing pages: See [Generic Guide: Pages Basics](../generic/05-pages-basics.md)
-- Adding components: See [Generic Guide: Components](../generic/06-components.md)
+- Creating pages: See [Generic Guide: Pages Basics](https://agilitycms.com/docs/training-guide/content-editor-pages-basics)
+- Editing pages: See [Generic Guide: Pages Basics](https://agilitycms.com/docs/training-guide/content-editor-pages-basics)
+- Adding components: See [Generic Guide: Components](https://agilitycms.com/docs/training-guide/content-editor-components)
 
 ## URL Structure
 

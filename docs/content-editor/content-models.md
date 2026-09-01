@@ -1,6 +1,6 @@
 # Demo Site: Content Models
 
-This guide documents all content models available in the Demo Site instance. For generic information about content models, see [Generic Guide: Content Basics](../generic/04-content-basics.md).
+This guide documents all content models available in the Demo Site instance. For generic information about content models, see [Generic Guide: Content Basics](https://agilitycms.com/docs/training-guide/content-editor-content-basics).
 
 ## Content Model Overview
 
@@ -296,9 +296,9 @@ The Demo Site has **24 content models** organized into different categories:
 ## Working with Content Models
 
 For generic information about:
-- Creating content items: See [Generic Guide: Content Basics](../generic/04-content-basics.md)
-- Editing content items: See [Generic Guide: Content Basics](../generic/04-content-basics.md)
-- Linking content: See [Generic Guide: Components](../generic/06-components.md)
+- Creating content items: See [Generic Guide: Content Basics](https://agilitycms.com/docs/training-guide/content-editor-content-basics)
+- Editing content items: See [Generic Guide: Content Basics](https://agilitycms.com/docs/training-guide/content-editor-content-basics)
+- Linking content: See [Generic Guide: Components](https://agilitycms.com/docs/training-guide/content-editor-components)
 
 ---
 

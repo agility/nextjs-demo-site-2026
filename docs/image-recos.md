@@ -527,6 +527,6 @@ For your codebase, verify:
 
 ## Additional Resources
 
-- [Using the AgilityPic Component for Responsive Images](/docs/nextjs/using-the-agilitypic-component-for-responsive-images)
-- [Field Types for Content and Modules](/docs/developers/fields)
+- [Using the AgilityPic Component for Responsive Images](https://agilitycms.com/docs/nextjs/using-the-agilitypic-component-for-responsive-images)
+- [Field Types for Content and Modules](https://agilitycms.com/docs/developers/fields)
 - [Next.js Image Optimization Documentation](https://nextjs.org/docs/app/building-your-application/optimizing/images)

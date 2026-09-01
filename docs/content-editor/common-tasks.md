@@ -1,6 +1,6 @@
 # Demo Site: Common Tasks
 
-This guide provides step-by-step instructions for common tasks specific to the Demo Site. For generic Agility CMS workflows, see the [Generic Training Guide](../generic/README.md).
+This guide provides step-by-step instructions for common tasks specific to the Demo Site. For generic Agility CMS workflows, see the [Generic Training Guide](https://agilitycms.com/docs/training-guide).
 
 ## Task: Create a New Blog Post
 

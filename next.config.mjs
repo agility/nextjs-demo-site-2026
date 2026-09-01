@@ -15,6 +15,47 @@ const nextConfig = {
 			{ protocol: "https", hostname: "cdn.agilitycms.com" },
 		],
 	},
+	async redirects() {
+		// These /docs namespaces belong to the official Agility docs site, not this
+		// repo's file-based docs — inbound links exist, so redirect instead of 404ing.
+		return [
+			{
+				source: "/docs/generic/04-content-basics",
+				destination: "https://agilitycms.com/docs/training-guide/content-editor-content-basics",
+				permanent: true,
+			},
+			{
+				source: "/docs/generic/05-pages-basics",
+				destination: "https://agilitycms.com/docs/training-guide/content-editor-pages-basics",
+				permanent: true,
+			},
+			{
+				source: "/docs/generic/06-components",
+				destination: "https://agilitycms.com/docs/training-guide/content-editor-components",
+				permanent: true,
+			},
+			{
+				source: "/docs/generic/:path*",
+				destination: "https://agilitycms.com/docs/training-guide",
+				permanent: true,
+			},
+			{
+				source: "/docs/editors/:path*",
+				destination: "https://agilitycms.com/docs/editors/:path*",
+				permanent: true,
+			},
+			{
+				source: "/docs/nextjs/:path*",
+				destination: "https://agilitycms.com/docs/nextjs/:path*",
+				permanent: true,
+			},
+			{
+				source: "/docs/developers/:path*",
+				destination: "https://agilitycms.com/docs/developers/:path*",
+				permanent: true,
+			},
+		]
+	},
 	async headers() {
 		return [
 			{

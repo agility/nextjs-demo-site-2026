@@ -7,7 +7,12 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { CodeBlock } from '../CodeBlock'
 
-export const revalidate = 3600 // Revalidate every hour
+// Docs content ships with the repo and only changes on deploy, so render every
+// page fully static at build time. dynamicParams=false prevents runtime
+// re-renders in the serverless function, which previously replaced good
+// prerendered folder pages (e.g. /docs/admin) with cached 404s in production.
+export const dynamic = 'force-static'
+export const dynamicParams = false
 
 export async function generateStaticParams() {
 	const files = await getAllDocFiles()

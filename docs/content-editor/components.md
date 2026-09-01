@@ -1,6 +1,6 @@
 # Demo Site: Components
 
-This guide documents all components available in the Demo Site instance. For generic information about components, see [Generic Guide: Components](../generic/06-components.md).
+This guide documents all components available in the Demo Site instance. For generic information about components, see [Generic Guide: Components](https://agilitycms.com/docs/training-guide/content-editor-components).
 
 ## Component Overview
 
@@ -321,9 +321,9 @@ The Demo Site has **20 component definitions** organized into categories:
 ## Working with Components
 
 For generic information about:
-- Adding components to pages: See [Generic Guide: Components](../generic/06-components.md)
-- Editing components: See [Generic Guide: Components](../generic/06-components.md)
-- Linking content to components: See [Generic Guide: Components](../generic/06-components.md)
+- Adding components to pages: See [Generic Guide: Components](https://agilitycms.com/docs/training-guide/content-editor-components)
+- Editing components: See [Generic Guide: Components](https://agilitycms.com/docs/training-guide/content-editor-components)
+- Linking content to components: See [Generic Guide: Components](https://agilitycms.com/docs/training-guide/content-editor-components)
 
 ---
 
