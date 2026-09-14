@@ -23,12 +23,20 @@ export function PostCard({ post }: PostCardProps) {
 							image={post.image}
 							fallbackWidth={400}
 							className="absolute inset-0 w-full h-full rounded-2xl bg-gray-50 dark:bg-gray-800 object-cover transition-transform duration-200 ease-in-out group-hover:scale-105 dark:grayscale"
+							// Passing BOTH width and height makes the Agility image API do the
+							// crop, which honours the focal point set in the CMS. With only a
+							// width the API scales proportionally and the CSS `object-cover`
+							// below crops from the centre, ignoring the focal point. Each
+							// entry therefore matches the aspect ratio rendered at that
+							// breakpoint. First match wins, so these run narrowest first.
 							sources={[
-								{ media: "(max-width: 639px)", width: 640 },
-								{ media: "(max-width: 767px)", width: 800 },
-								{ media: "(max-width: 1023px)", width: 1200 },
-
-
+								// aspect-video (16:9)
+								{ media: "(max-width: 639px)", width: 640, height: 360 },
+								// sm:aspect-2/1
+								{ media: "(max-width: 767px)", width: 800, height: 400 },
+								{ media: "(max-width: 1023px)", width: 1200, height: 600 },
+								// lg:aspect-square at lg:w-64 (256px), so 2x for retina.
+								{ media: "(min-width: 1024px)", width: 512, height: 512 },
 							]}
 						/>
 					</ViewTransition>

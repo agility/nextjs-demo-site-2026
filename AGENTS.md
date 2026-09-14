@@ -353,6 +353,23 @@ import type { ImageField } from "@agility/nextjs"
 - `priority`: Set to `true` for above-the-fold images (loads eagerly)
 - `sources`: Array of source definitions for responsive images with media queries
 
+**Focal Point Cropping (`width` + `height`):**
+
+Agility's image API only honours the focal point an editor set in the CMS when **both** `w` and `h` are present in the URL. `AgilityPic` emits `h` only when a source specifies `height`:
+
+| Source entry | Generated URL | Focal point |
+| --- | --- | --- |
+| `{ width: 512 }` | `?format=auto&w=512` | ❌ Ignored |
+| `{ width: 512, height: 512 }` | `?format=auto&w=512&h=512` | ✅ Respected |
+
+With width alone the CDN scales proportionally, so any cropping is left to CSS `object-cover` — which always crops from the **centre** and discards the focal point.
+
+**Rule:** if an image renders with `object-cover` into a fixed aspect ratio, every `sources` entry must set `height` to match the ratio rendered at that breakpoint. When the ratio changes per breakpoint, each source needs its own ratio — see `src/components/agility-components/post-listing/PostCard.tsx` for a worked example (16:9 → 2:1 → square).
+
+**⚠️ Upscaling caveat:** `AgilityPic` clamps the request to the source image's dimensions *only* for width-only or height-only sources. When both `width` and `height` are supplied the clamp is skipped, so a crop larger than the original will upscale. Upload source images at 2x the largest crop.
+
+**Retina:** `AgilityPic` writes one URL per `<source>` and has no `1x`/`2x` density descriptors, so high-DPI is handled with resolution media queries (`(min-width: 640px) and (min-resolution: 2dppx)`). Put the high-DPI query *before* the plain one — first match wins. See `post-details/PostImage.tsx`.
+
 ### Component Standards
 
 - All components should accept `UnloadedModuleProps` with `module` and `languageCode`

@@ -115,12 +115,15 @@ For a card that displays in different layouts:
   fallbackWidth={400}
   className="absolute inset-0 w-full h-full object-cover"
   sources={[
-    { media: "(max-width: 639px)", width: 640 },
-    { media: "(max-width: 767px)", width: 800 },
-    { media: "(max-width: 1023px)", width: 1200 },
+    { media: "(max-width: 639px)", width: 640, height: 360 },
+    { media: "(max-width: 767px)", width: 800, height: 400 },
+    { media: "(max-width: 1023px)", width: 1200, height: 600 },
+    { media: "(min-width: 1024px)", width: 512, height: 512 },
   ]}
 />
 ```
+
+Each entry sets `height` so the CDN crops to the focal point — see [Handling Focal Points with Different Aspect Ratios](#handling-focal-points-with-different-aspect-ratios).
 
 ### Carousel Slides
 
@@ -266,7 +269,7 @@ Each source object can include:
 |------|------|-------------|
 | `media` | `string` | CSS media query (e.g., `"(min-width: 768px)"`) |
 | `width` | `number` | Desired image width |
-| `height` | `number` | Optional. Desired image height (enables cropping) |
+| `height` | `number` | Optional. Desired image height. Supplying it makes the CDN crop, which is what enables [focal points](#handling-focal-points-with-different-aspect-ratios). Without it the crop falls to CSS and is always centred. |
 
 ## How It Works
 
@@ -280,69 +283,73 @@ https://cdn.agilitycms.com/your-image.jpg?format=auto&w=800
 - `w=800` resizes the image to 800px wide
 - Adding `h=600` would crop to 800x600
 
-The component also respects the original image dimensions—it won't upscale an image beyond its original size.
+The component also respects the original image dimensions—it won't upscale an image beyond its original size. **This clamp only applies to width-only or height-only sources**; when a source supplies both `width` and `height` the clamp is skipped and a larger crop will upscale.
 
 ## Handling Focal Points with Different Aspect Ratios
 
-When the same image needs to display in different aspect ratios (e.g., rectangular on desktop, square on mobile), and the image has a focal point set in Agility CMS, the `AgilityPic` component may not handle this automatically.
+Agility CMS lets content editors set a **focal point** on an image — the part of the picture that must stay visible when the image gets cropped. The focal point is only applied when the transformation URL carries **both** a width and a height.
 
-**The issue**: Focal points work when both `width` and `height` are specified in the transformation URL. The crop then centers on the focal point rather than the image center. However, if you need different aspect ratios at different breakpoints, each source needs its own width/height combination.
+`AgilityPic` supports this directly. Add `height` alongside `width` in a `sources` entry and the generated URL includes `&h=`:
 
-**The solution**: Create a manual `<picture>` tag with explicit sources for each aspect ratio:
+| Source entry | Generated URL | Focal point |
+| --- | --- | --- |
+| `{ width: 512 }` | `?format=auto&w=512` | ❌ Ignored |
+| `{ width: 512, height: 512 }` | `?format=auto&w=512&h=512` | ✅ Respected |
+
+### Why a width-only source silently breaks focal points
+
+This is the part that catches people out, because nothing looks broken — the image just crops in the wrong place.
+
+With `width` alone, the CDN scales the image proportionally and hands the browser (say) a 512x341 image. If your CSS then forces that into a square box with `object-cover`, **the browser** performs the crop — and `object-cover` always crops from the **centre**. The focal point is never consulted, because the CDN was never told to crop.
+
+Supplying `height` moves the crop from the browser to the CDN, which is the only place the focal point is known.
+
+> **Rule of thumb:** any image rendered with `object-cover` into a fixed aspect ratio should specify `height` on every source.
+
+### Worked example: a ratio that changes per breakpoint
+
+`PostCard` renders the same post image at three different aspect ratios:
 
 ```tsx
-import type { ImageField } from "@agility/nextjs"
-
-interface Props {
-  image: ImageField
-  className?: string
-}
-
-export function ResponsiveAspectImage({ image, className }: Props) {
-  const baseUrl = image.url
-
-  return (
-    <picture>
-      {/* Square aspect ratio for mobile - focal point will be respected */}
-      <source
-        media="(max-width: 639px)"
-        srcSet={`${baseUrl}?format=auto&w=640&h=640`}
-      />
-
-      {/* 16:9 aspect ratio for tablet */}
-      <source
-        media="(max-width: 1023px)"
-        srcSet={`${baseUrl}?format=auto&w=1024&h=576`}
-      />
-
-      {/* 3:2 aspect ratio for desktop */}
-      <source
-        media="(min-width: 1024px)"
-        srcSet={`${baseUrl}?format=auto&w=1200&h=800`}
-      />
-
-      {/* Fallback */}
-      <img
-        src={`${baseUrl}?format=auto&w=400&h=400`}
-        alt={image.label}
-        loading="lazy"
-        className={className}
-      />
-    </picture>
-  )
-}
+<div className="relative aspect-video sm:aspect-2/1 lg:aspect-square lg:w-64 lg:shrink-0">
 ```
 
-**Key points:**
-- Each `<source>` includes both `w` (width) and `h` (height) parameters
-- The focal point set in Agility CMS will be respected for each crop
-- Different aspect ratios can be served at different breakpoints
-- The fallback `<img>` should also include both dimensions for consistent behavior
+Each source therefore needs its own width/height pair matching the ratio rendered at that breakpoint:
 
-**When to use this approach:**
-- Product images that show square on mobile but landscape on desktop
-- Hero images where the subject needs to stay centered regardless of crop
-- Any scenario where art direction requires different aspect ratios with a non-center focal point
+```tsx
+<AgilityPic
+  image={post.image}
+  fallbackWidth={400}
+  className="absolute inset-0 w-full h-full object-cover"
+  sources={[
+    // aspect-video (16:9)
+    { media: "(max-width: 639px)", width: 640, height: 360 },
+    // sm:aspect-2/1
+    { media: "(max-width: 767px)", width: 800, height: 400 },
+    { media: "(max-width: 1023px)", width: 1200, height: 600 },
+    // lg:aspect-square at lg:w-64 (256px), so 2x for retina.
+    { media: "(min-width: 1024px)", width: 512, height: 512 },
+  ]}
+/>
+```
+
+Because the CDN now returns an image already at the target ratio, `object-cover` becomes a no-op and the focal-point crop is what the visitor actually sees.
+
+### Watch the breakpoint coverage
+
+When mixing `max-width` and `min-width` queries, make sure every viewport matches a source. It is easy to write a list of `max-width` rules that stops short and leaves the largest screens with **no** matching source — those fall through to the `fallbackWidth` `<img>`, which has no height and therefore no focal point. The `(min-width: 1024px)` entry above exists precisely to catch that case.
+
+### ⚠️ Upscaling caveat
+
+`AgilityPic` caps a request at the source image's own dimensions **only** for width-only or height-only sources. When both `width` and `height` are supplied that clamp is skipped, so requesting a crop larger than the original will upscale it. Upload source images at 2x your largest crop.
+
+The fallback `<img>` cannot be focal-cropped at all — the component exposes `fallbackWidth` but no `fallbackHeight`. As long as your sources cover every breakpoint this is unreachable in practice.
+
+**When this matters most:**
+
+- Product images shown square on mobile but landscape on desktop
+- Portraits or team headshots, where a centre crop can cut off a face
+- Any art direction where the subject sits away from the centre of the frame
 
 ## Performance Tips
 
@@ -351,6 +358,7 @@ export function ResponsiveAspectImage({ image, className }: Props) {
 3. **Order sources from smallest to largest** when using `max-width` queries
 4. **Use `priority={true}`** for above-the-fold hero images
 5. **Upload at 2x your largest display size** at 72 DPI for high-DPI support
+6. **Set `height` on every source** when the image renders with `object-cover`, so the focal point is respected
 
 ## Related Resources
 
