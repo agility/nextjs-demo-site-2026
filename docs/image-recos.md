@@ -18,6 +18,7 @@ Code examples use Next.js, but the same principles apply to other frameworks. Th
 | **Component**       | Use `AgilityPic` (renders `<picture>` with sources, routes transforms through Agility CDN) |
 | **High-DPI**        | Use `min-resolution: 2dppx` media queries in `sources`                                     |
 | **Mobile fallback** | Set `fallbackWidth` prop                                                                   |
+| **Focal points**    | Set BOTH `width` and `height` on a source, or the focal point is ignored                   |
 
 ---
 
@@ -301,7 +302,7 @@ The `AgilityPic` component renders a native HTML `<picture>` element with `<sour
 - **Native `<picture>` element** — no client component requirement, no JavaScript overhead
 - **Agility CDN handles transformations** (not your web server's CPU)
 - **Automatic `format=auto`** on all generated URLs
-- **Won't upscale** — if you request a width larger than the source image, it caps at the source width
+- **Won't upscale** — if you request a width larger than the source image, it caps at the source width (applies to width-only or height-only sources; see [Focal Points and Cropping](#focal-points-and-cropping))
 - **Responsive source selection** via the `sources` array with media queries
 - **High-DPI support** via media queries with `min-resolution`
 
@@ -406,6 +407,44 @@ sources={[
   { media: "(min-width: 1280px) and (min-resolution: 2dppx)", width: 2400 },
 ]}
 ```
+
+### Focal Points and Cropping
+
+Content editors can set a **focal point** on an image in Agility CMS — the part that must stay visible when the image is cropped. The CDN only applies it when the URL carries **both** a width and a height.
+
+A `sources` entry takes an optional `height` alongside `width`:
+
+| Source entry | Generated URL | Focal point |
+| --- | --- | --- |
+| `{ width: 512 }` | `?format=auto&w=512` | ❌ Ignored |
+| `{ width: 512, height: 512 }` | `?format=auto&w=512&h=512` | ✅ Respected |
+
+**Why width-only silently breaks focal points.** With `width` alone the CDN scales proportionally and returns (say) a 512x341 image. If CSS then forces that into a square with `object-cover`, **the browser** does the crop — and `object-cover` always crops from the centre. The focal point is never consulted, because the CDN was never asked to crop.
+
+> **Rule of thumb:** any image rendered with `object-cover` into a fixed aspect ratio should set `height` on every source.
+
+**Example — a ratio that changes per breakpoint.** Each source gets the width/height pair matching the ratio rendered at that breakpoint:
+
+```tsx
+// Rendered into: aspect-video  →  sm:aspect-2/1  →  lg:aspect-square
+<AgilityPic
+  image={post.image}
+  fallbackWidth={400}
+  className="absolute inset-0 h-full w-full object-cover"
+  sources={[
+    { media: '(max-width: 639px)', width: 640, height: 360 },   // 16:9
+    { media: '(max-width: 767px)', width: 800, height: 400 },   // 2:1
+    { media: '(max-width: 1023px)', width: 1200, height: 600 }, // 2:1
+    { media: '(min-width: 1024px)', width: 512, height: 512 },  // square, 2x of 256px
+  ]}
+/>
+```
+
+**Cover every breakpoint.** When mixing `max-width` and `min-width` queries, check that no viewport falls through the list. A set of `max-width` rules that stops short leaves the largest screens with no matching source, so they drop to the `fallbackWidth` `<img>` — which has no height, and therefore no focal point. The `(min-width: 1024px)` entry above exists to catch exactly that.
+
+**⚠️ Upscaling caveat.** The "won't upscale" clamp applies only to width-only or height-only sources. When both `width` and `height` are given the clamp is skipped, so a crop larger than the original will upscale. Upload at 2x your largest crop.
+
+There is no `fallbackHeight` prop, so the fallback `<img>` can never be focal-cropped. That is unreachable as long as your sources cover every breakpoint.
 
 ### Common Breakpoints
 
