@@ -70,6 +70,6 @@ To adjust the animations, modify the CSS in `src/styles/view-transitions.css`:
 
 ## Notes
 
-- This uses React's experimental ViewTransition API which requires Next.js 15.2+
+- This uses React's experimental ViewTransition API which requires Next.js 16 / React 19.3 (now a stable React export)
 - The API is still experimental and may change in future React releases
 - Make sure to test in supported browsers for the best experience

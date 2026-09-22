@@ -46,11 +46,11 @@ Our team will:
 
 ## Technology Stack
 
-- **Framework**: Next.js 15.5.3 with App Router
-- **React**: 19.1.0
+- **Framework**: Next.js 16.3.5 with App Router
+- **React**: 19.3.0
 - **TypeScript**: Full type safety
 - **Styling**: Tailwind CSS v4
-- **CMS**: Agility CMS (@agility/nextjs 15.0.7)
+- **CMS**: Agility CMS (@agility/nextjs 16.0.8)
 - **Animations**: Motion (Framer Motion alternative)
 - **AI**: Azure OpenAI + Algolia integration
 - **Analytics**: PostHog integration

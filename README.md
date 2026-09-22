@@ -23,12 +23,13 @@ Our team will:
 - **Headless CMS Integration** - Full Agility CMS integration with dynamic page routing
 - **AI-Powered Search** - Azure OpenAI + Algolia integration for intelligent content search
 - **Internationalization** - Multi-locale support with clean URL routing
-- **Advanced Caching** - Next.js cache tags with automatic revalidation
+- **Cache Components (PPR)** - `"use cache"` + long TTLs, invalidated the instant an editor publishes
 - **Preview Mode** - Draft content preview with Agility CMS integration
 - **Audience & Region Personalization** - URL-based personalization system
 - **View Transitions** - Smooth page transitions using React ViewTransition API
 - **Type Safety** - Strongly-typed environment variables and CMS content
-- **Modern Stack** - Next.js 15.5.3, React 19, Tailwind CSS v4, TypeScript
+- **Machine-readable** - `/llms.txt`, clean `.md` for every page, and an MCP server at `/api/mcp`
+- **Modern Stack** - Next.js 16.3.5, React 19.3, Tailwind CSS v4, TypeScript
 
 ## 🤖 For AI Coding Assistants
 
@@ -48,7 +49,7 @@ Supported AI assistants: Cursor, GitHub Copilot, Windsurf, Claude Code, OpenAI C
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 20.9+ (required by Next.js 16)
 - npm or yarn
 - Agility CMS instance (get one at [agilitycms.com](https://agilitycms.com))
 
@@ -80,8 +81,11 @@ AGILITY_API_PREVIEW_KEY=your-preview-api-key
 AGILITY_SECURITY_KEY=your-security-key
 AGILITY_LOCALES=en-us,fr-ca,es-mx
 AGILITY_SITEMAP=website
-AGILITY_FETCH_CACHE_DURATION=60
 AGILITY_PATH_REVALIDATE_DURATION=60
+
+# Optional: make `next dev` serve PUBLISHED content instead of staging.
+# Local dev shows editors' unpublished work by default.
+# FORCE_PUBLISHED=1
 
 # PostHog Analytics (Optional)
 NEXT_PUBLIC_POSTHOG_KEY=your-posthog-key
@@ -97,8 +101,11 @@ BUILD_HOOK_URL=https://your-build-hook-url
 ### Development
 
 ```bash
-# Start development server with Turbopack
+# Start development server (Turbopack is the default in Next 16)
 npm run dev
+
+# Serve published content locally instead of staging
+FORCE_PUBLISHED=1 npm run dev
 
 # Run prebuild (rebuilds redirect cache - required before production build)
 npm run prebuild
@@ -109,7 +116,7 @@ npm run build
 # Start production server
 npm run start
 
-# Run linter
+# Run linter (`eslint .` — `next lint` was removed in Next 16)
 npm run lint
 ```
 
@@ -159,17 +166,17 @@ Content managed in Agility CMS → API fetching → Next.js rendering
 
 ### Key File Relationships
 
-- `src/middleware.ts` → Handles preview, redirects, i18n routing
+- `src/proxy.ts` → Handles preview, redirects, i18n routing
 - `src/lib/cms/` → All CMS API abstractions with caching
 - `src/components/agility-components/` → CMS-bound components
 
 ## 🎨 Technology Stack
 
-- **Framework**: Next.js 15.5.3 (App Router)
-- **React**: 19.1.0
+- **Framework**: Next.js 16.3.5 (App Router)
+- **React**: 19.3.0
 - **TypeScript**: 5.x
 - **Styling**: Tailwind CSS v4 (CSS-file based)
-- **CMS**: Agility CMS (@agility/nextjs 15.0.7)
+- **CMS**: Agility CMS (@agility/nextjs 16.0.8)
 - **Animations**: Motion 12.23.0
 - **AI**: Azure OpenAI + Algolia
 - **Analytics**: PostHog
@@ -193,10 +200,11 @@ const allModules = [
 ### Standard Component Pattern
 
 ```typescript
-export const ComponentName = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const ComponentName = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
   const { fields, contentID } = await getContentItem<IComponentType>({
     contentID: module.contentid,
     languageCode,
+    preview: isPreview, // REQUIRED: published reads are cached, preview reads are not
   })
 
   return (
@@ -214,12 +222,14 @@ export const ComponentName = async ({ module, languageCode }: UnloadedModuleProp
 const { fields: { nestedRef: { referencename } } } = await getContentItem<MainType>({
   contentID: module.contentid,
   languageCode,
+  preview: isPreview,
 })
 
 // Fetch nested collection separately
 const nestedItems = await getContentList<NestedType>({
   referenceName: referencename,
   languageCode,
+  preview: isPreview,
   take: 20
 })
 ```
@@ -277,10 +287,26 @@ const audienceContentID = await getAudienceContentID(searchParams, locale)
 
 ## 🔄 Caching & Revalidation
 
-- **Automatic Cache Tags**: All CMS fetches include Next.js cache tags
-- **Tag Format**: `agility-content-{contentID|referenceName}-{locale}`
-- **Revalidation**: 60-second cache + tag-based invalidation
-- **Webhook**: `/api/revalidate` receives Agility CMS publish events
+The site runs on **Cache Components** (`cacheComponents: true`), Next 16's Partial
+Prerendering model. Every page is a static shell with request-time parts streamed in.
+
+- **Published reads** are wrapped in `"use cache"` + `cacheTag(...)` + `cacheLife("days")`
+- **Preview reads** bypass the cache entirely (`await connection()`)
+- **Tag format**: `agility-content-{contentID|referenceName}-{locale}`,
+  `agility-page-{pageID}-{locale}`, `agility-sitemap-flat-{locale}`
+- **Webhook**: `/api/revalidate` receives Agility publish events and calls
+  `revalidateTag(tag, "max")` — so long TTLs cost nothing; publishing is instant
+
+**`preview` is an explicit parameter, never ambient state.** `draftMode()` is read in
+exactly one place (`getAgilityContext()`) and threaded down. Reintroducing a
+`draftMode()` call inside `src/lib/cms/` makes every read request-scoped and stops the
+whole site prerendering.
+
+**Route segment configs `revalidate` / `runtime` / `dynamic` / `dynamicParams` are
+rejected** under `cacheComponents`. So are unstable values (`new Date()`, `Date.now()`,
+`Math.random()`) outside a cached scope.
+
+See [AGENTS.md](AGENTS.md) for the full rules.
 
 ## 🔍 AI Search
 
@@ -289,6 +315,20 @@ AI-powered search using Azure OpenAI and Algolia:
 - **Endpoint**: `/api/ai/search`
 - **Features**: Streaming responses, tool calling, rate limiting
 - **Components**: Chat interface, message history, markdown rendering
+
+## 🤖 Machine-readable surfaces
+
+For crawlers and AI assistants that never execute JavaScript:
+
+| Surface | What it is |
+|---|---|
+| `/llms.txt` | [llmstxt.org](https://llmstxt.org) index — curated prose plus a page list generated from the CMS sitemap |
+| `/{any-page}.md` | That page as clean markdown (e.g. `/about-us.md`) |
+| `/api/mcp` | MCP server: `list_pages`, `get_page`, `search_content` |
+| JSON-LD | One `@graph` per page with stable `@id`s — see `src/lib/seo/schema.ts` |
+
+All of them read through the same cached CMS getters the HTML pages use, so they can
+never disagree with the rendered site and they revalidate on the same publish webhook.
 
 ## 🚢 Deployment
 
@@ -356,6 +396,10 @@ The documentation is built using MDX routing with markdown files in the `docs/` 
 ### Preview Mode Not Working
 - Ensure `agilitypreviewkey` param is present (not just `AgilityPreview`)
 - Check that `AGILITY_API_PREVIEW_KEY` is set correctly
+- Preview is handled **twice on purpose** — by `src/proxy.ts` (uncached requests) and by
+  `beforeFiles` rewrites in `next.config.mjs` (cached ones). Vercel and Netlify serve
+  prerendered pages straight from the edge *without invoking the proxy*, so deleting
+  either side silently breaks preview on exactly the pages that matter most.
 
 ### Redirects Not Working
 - Run `npm run prebuild` before building
@@ -364,6 +408,15 @@ The documentation is built using MDX routing with markdown files in the `docs/` 
 ### Components Not Rendering
 - Verify component is registered in `src/components/agility-components/index.ts`
 - Check that component name matches Agility CMS module name (case-insensitive)
+- If an **entire content zone** is empty while the build is green and the page returns
+  200, check template-name normalization in `src/lib/cms/getAgilityPage.ts`: the CMS
+  returns the display name ("Main Template") and the registry is keyed by component
+  name ("MainTemplate")
+
+### A New Route 404s in Production but Works in `next dev`
+`src/proxy.ts` validates every path against the published sitemap and answers 404
+itself (the check is skipped in dev). Add hand-written routes to `APP_PATHS` or
+`APP_PREFIXES` in `src/lib/cms/publishedPaths.ts`.
 
 ### Cache Not Updating
 - Verify webhook is configured in Agility CMS
