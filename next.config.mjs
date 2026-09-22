@@ -3,6 +3,13 @@ const nextConfig = {
 	// NOTE: `experimental.viewTransition` was removed here. React 19.3 stabilized
 	// <ViewTransition>, so Next 16.3 no longer recognizes the flag and warns about
 	// it on boot. The components import the stable export from "react" directly.
+
+	// Cache Components (Next 16's Partial Prerendering model). Every Agility read
+	// in src/lib/cms/ is wrapped in `"use cache"` + cacheTag + cacheLife("days"),
+	// and invalidated the instant an editor publishes via /api/revalidate. Pages
+	// get a static shell with the request-time parts streamed in.
+	// This replaces the old `export const revalidate = 60` on each route.
+	cacheComponents: true,
 	poweredByHeader: false,
 	compress: true,
 	compiler: {

@@ -22,7 +22,7 @@ interface IBentoCard {
 	graphic: ImageField
 }
 
-export const BentoSection = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const BentoSection = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			subheading,
@@ -31,12 +31,14 @@ export const BentoSection = async ({ module, languageCode }: UnloadedModuleProps
 		},
 		contentID,
 	} = await getContentItem<IBentoSection>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
 
 	//now go get the bento cards
 	const bentoCards = await getContentList<IBentoCard>({
+		preview: isPreview,
 		referenceName: cardsReferenceName,
 		languageCode,
 		take: 20, // adjust as needed

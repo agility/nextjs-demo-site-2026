@@ -17,7 +17,7 @@ interface Props {
 	parent: ResolvingMetadata
 }
 
-export const resolveAgilityMetaData = async ({ agilityData, locale, parent }: Props): Promise<Metadata> => {
+export const resolveAgilityMetaData = async ({ agilityData, locale, parent, isPreview }: Props): Promise<Metadata> => {
 
 
 	const header = await getHeaderContent({ locale })
@@ -37,6 +37,7 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent }: Pr
 		//get the content item for this dynamic page
 		try {
 			const contentItem: ContentItem = await getContentItem({
+				preview: isPreview,
 				contentID: agilityData.sitemapNode.contentID,
 				languageCode: locale,
 				locale

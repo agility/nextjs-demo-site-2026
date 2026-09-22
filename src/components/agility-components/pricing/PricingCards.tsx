@@ -29,7 +29,7 @@ interface TransformedTier {
 	regionID?: string
 }
 
-export const PricingCards = async ({ module, languageCode, globalData }: UnloadedModuleProps) => {
+export const PricingCards = async ({ module, languageCode, globalData, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			title,
@@ -39,12 +39,14 @@ export const PricingCards = async ({ module, languageCode, globalData }: Unloade
 		},
 		contentID,
 	} = await getContentItem<IPricingCards>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
 
 	// Get the pricing tiers
 	const tiersData = await getContentList<IPricingTier>({
+		preview: isPreview,
 		referenceName: tiersReferenceName,
 		languageCode,
 		take: 100,

@@ -83,7 +83,7 @@ interface PricingTier {
 // 	},
 // ]
 
-export const PricingTable = async ({ module, languageCode, globalData }: UnloadedModuleProps) => {
+export const PricingTable = async ({ module, languageCode, globalData, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			title,
@@ -92,6 +92,7 @@ export const PricingTable = async ({ module, languageCode, globalData }: Unloade
 		},
 		contentID,
 	} = await getContentItem<IPricingTable>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

@@ -5,7 +5,7 @@ import { getContentList } from "@/lib/cms/getContentList"
 import type { ITestimonialsSection, ITestimonial } from './types'
 import { TestimonialsClient } from "./TestimonialsClient"
 
-export const Testimonials = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const Testimonials = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			subheading,
@@ -16,6 +16,7 @@ export const Testimonials = async ({ module, languageCode }: UnloadedModuleProps
 		},
 		contentID,
 	} = await getContentItem<ITestimonialsSection>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 		contentLinkDepth: 0
@@ -23,6 +24,7 @@ export const Testimonials = async ({ module, languageCode }: UnloadedModuleProps
 
 	// Fetch the testimonials list
 	const testimonials = await getContentList<ITestimonial>({
+		preview: isPreview,
 		referenceName: testimonialsReferenceName,
 		languageCode,
 		take: 20, // adjust as needed

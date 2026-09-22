@@ -7,12 +7,11 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { CodeBlock } from '../CodeBlock'
 
-// Docs content ships with the repo and only changes on deploy, so render every
-// page fully static at build time. dynamicParams=false prevents runtime
-// re-renders in the serverless function, which previously replaced good
-// prerendered folder pages (e.g. /docs/admin) with cached 404s in production.
-export const dynamic = 'force-static'
-export const dynamicParams = false
+// Docs content ships with the repo and only changes on deploy. The `dynamic`
+// and `dynamicParams` route segment configs are rejected under
+// `cacheComponents`, so they are gone: generateStaticParams below still
+// prerenders every page at build time, and an unknown slug falls through to
+// notFound().
 
 export async function generateStaticParams() {
 	const files = await getAllDocFiles()

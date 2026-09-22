@@ -43,17 +43,19 @@ function Person({
 	)
 }
 
-export const TeamListing = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const TeamListing = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: { heading, team: { referencename: teamReferenceName } },
 		contentID,
 	} = await getContentItem<ITeamListing>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
 
 	// Get the team members from the "team" content list
 	const { items: teamMembers } = await getContentList<ITeamMember>({
+		preview: isPreview,
 		referenceName: teamReferenceName,
 		languageCode,
 		take: 50, // adjust as needed

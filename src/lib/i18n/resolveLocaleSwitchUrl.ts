@@ -23,6 +23,8 @@ interface ResolveArgs {
 	targetLocale: string
 	pageID: number
 	contentID?: number
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -41,11 +43,13 @@ export const resolveLocaleSwitchUrl = async ({
 	targetLocale,
 	pageID,
 	contentID,
+	preview = false,
 }: ResolveArgs): Promise<string | null> => {
 	if (!isValidLocale(targetLocale, locales)) return null
 	if (!Number.isFinite(pageID) || pageID <= 0) return null
 
 	const sitemap = (await getSitemapFlat({
+		preview,
 		channelName: CHANNEL_NAME,
 		languageCode: targetLocale,
 	})) as FlatSitemap

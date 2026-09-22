@@ -40,7 +40,7 @@ interface FormState {
  * @param {UnloadedModuleProps} props - The properties passed to the component.
  * @returns {JSX.Element} The rendered contact section.
  */
-export const ContactUs = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const ContactUs = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			heading,
@@ -55,6 +55,7 @@ export const ContactUs = async ({ module, languageCode }: UnloadedModuleProps) =
 		},
 		contentID,
 	} = await getContentItem<IContactUs>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

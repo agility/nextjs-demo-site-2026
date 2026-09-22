@@ -5,6 +5,8 @@ import { type AudienceWithContentID, transformContentItemsWithContentID } from "
 
 interface LoadAudiencesProp {
 	locale: string
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -13,11 +15,12 @@ interface LoadAudiencesProp {
  * @param param0
  * @returns
  */
-export const getAudienceListingWithContentID = async ({ locale }: LoadAudiencesProp): Promise<AudienceWithContentID[]> => {
+export const getAudienceListingWithContentID = async ({ locale, preview = false }: LoadAudiencesProp): Promise<AudienceWithContentID[]> => {
 
 	try {
 		// get audiences...
 		const rawAudiences: ContentList = await getContentList<IAudience>({
+			preview,
 			referenceName: "audiences",
 			languageCode: locale,
 			contentLinkDepth: 2,

@@ -1,7 +1,7 @@
 import { getPageTemplate } from "@/components/agility-pages"
 import { type PageProps, getAgilityPage } from "@/lib/cms/getAgilityPage"
 import { getAgilityContext } from "@/lib/cms/getAgilityContext"
-import agilitySDK from "@agility/content-fetch"
+import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
 
 import type { Metadata, ResolvingMetadata } from "next"
 
@@ -14,41 +14,33 @@ import { Container } from "@/components/container"
 import { Navbar } from "@/components/header/navbar"
 import { getHeaderContent } from "@/lib/cms-content/getHeaderContent"
 
-export const revalidate = 60
-export const runtime = "nodejs"
+// NOTE: the `revalidate` and `runtime` route segment configs were removed —
+// both are rejected under `cacheComponents`. Freshness now comes from
+// cacheLife("days") on each read in src/lib/cms/ plus instant tag
+// invalidation from the publish webhook in /api/revalidate. "nodejs" was
+// already the default runtime.
 
 /**
  * Generate the list of pages that we want to generate a build time.
  */
 export async function generateStaticParams() {
-	const isDevelopmentMode = process.env.NODE_ENV === "development";
-	const isPreview = isDevelopmentMode;
-	const apiKey = isPreview ? process.env.AGILITY_API_PREVIEW_KEY : process.env.AGILITY_API_FETCH_KEY;
-	const agilityClient = agilitySDK.getApi({
-		guid: process.env.AGILITY_GUID,
-		apiKey,
-		isPreview,
-	});
 
 	const allPaths: { locale: string; slug: string[] }[] = [];
 
-	// Generate paths for each locale
+	// Generate paths for each locale. This goes through the cached getSitemapFlat
+	// primitive rather than building its own SDK client with hand-written fetch
+	// tags, so the build and the render share one cache entry per locale.
+	// Published content only: a build must never bake staging content into
+	// static pages.
 	for (const locale of locales) {
-		agilityClient.config.fetchConfig = {
-			next: {
-				tags: [`agility-sitemap-flat-${locale}`],
-				revalidate: 60,
-			},
-		};
-
-		// Get the flat sitemap for this locale
-		const sitemap: { [path: string]: SitemapNode } = await agilityClient.getSitemapFlat({
+		const sitemap = await getSitemapFlat({
 			channelName: process.env.AGILITY_SITEMAP || "website",
 			languageCode: locale,
-		});
+			preview: false,
+		}) as { [path: string]: SitemapNode };
 
 		const localePaths = Object.values(sitemap)
-			.filter((node, index) => {
+			.filter((node) => {
 				if (node.redirect !== null || node.isFolder === true) return false;
 				return true;
 			})
@@ -101,8 +93,8 @@ export default async function Page({ params }: PageProps) {
 	// The header (with the language switcher) is rendered here so it can use the
 	// current page's sitemap node - pageID and, for dynamic pages, contentID -
 	// to resolve the equivalent page when switching locales.
-	const { locale } = await getAgilityContext((await params).locale);
-	const header = await getHeaderContent({ locale });
+	const { locale, isPreview } = await getAgilityContext((await params).locale);
+	const header = await getHeaderContent({ locale, preview: isPreview });
 	const node = agilityData.sitemapNode;
 
 	return (

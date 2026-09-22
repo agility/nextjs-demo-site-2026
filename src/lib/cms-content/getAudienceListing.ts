@@ -6,6 +6,8 @@ interface LoadAudiencesProp {
 	locale: string
 	skip: number
 	take: number
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -13,13 +15,14 @@ interface LoadAudiencesProp {
  * @param param0
  * @returns
  */
-export const getAudienceListing = async ({ locale, skip, take }: LoadAudiencesProp): Promise<IAudience[]> => {
+export const getAudienceListing = async ({ locale, skip, take, preview = false }: LoadAudiencesProp): Promise<IAudience[]> => {
 
 	try {
 
 
 		// get audiences...
 		const rawAudiences: ContentList = await getContentList<IAudience>({
+			preview,
 			referenceName: "audiences",
 			languageCode: locale,
 			contentLinkDepth: 2,

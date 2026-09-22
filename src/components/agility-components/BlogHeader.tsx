@@ -17,11 +17,12 @@ interface IBlogHeader {
  * @param {UnloadedModuleProps} props - The properties passed to the component.
  * @returns {JSX.Element} The rendered blog header section.
  */
-export const BlogHeader = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const BlogHeader = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: { subheading, heading, description },
 		contentID,
 	} = await getContentItem<IBlogHeader>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

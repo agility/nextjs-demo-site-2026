@@ -23,11 +23,12 @@ interface IGradientHero {
  * @param {UnloadedModuleProps} props - The properties passed to the component.
  * @returns {JSX.Element} The rendered hero section.
  */
-export const BackgroundHero = async ({ module, languageCode, page }: UnloadedModuleProps) => {
+export const BackgroundHero = async ({ module, languageCode, page, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: { heading, description, cta1, cta2, backgroundType, backgroundImage },
 		contentID,
 	} = await getContentItem<IGradientHero>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

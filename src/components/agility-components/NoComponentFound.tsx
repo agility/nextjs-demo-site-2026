@@ -6,6 +6,7 @@ import OutputContentItem from "./output-content-item/OutputContentItem"
 
 const NoComponentFound = async ({ module, languageCode, isDevelopmentMode, isPreview }: UnloadedModuleProps) => {
 	const contentItem = await getContentItem<any>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

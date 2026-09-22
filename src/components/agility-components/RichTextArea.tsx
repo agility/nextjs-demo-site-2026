@@ -6,11 +6,12 @@ export interface RichText {
 	textblob: string
 }
 
-const RichTextArea = async ({ module, languageCode }: UnloadedModuleProps) => {
+const RichTextArea = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: { textblob },
 		contentID,
 	} = await getContentItem<RichText>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

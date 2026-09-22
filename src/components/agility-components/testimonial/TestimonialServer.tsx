@@ -9,7 +9,7 @@ interface ITestimonialComponent {
 	backgroundPattern?: string
 }
 
-export const Testimonial = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const Testimonial = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			testimonial,
@@ -17,6 +17,7 @@ export const Testimonial = async ({ module, languageCode }: UnloadedModuleProps)
 		},
 		contentID,
 	} = await getContentItem<ITestimonialComponent>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 		contentLinkDepth: 1

@@ -19,16 +19,18 @@ interface ICarouselSlideFields {
 	description?: string
 }
 
-export const Carousel = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const Carousel = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: { subheading = "", heading = "", slides: { referencename: slidesRef } },
 		contentID
 	} = await getContentItem<ICarouselModuleFields>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode
 	});
 
 	const slides = await getContentList<ICarouselSlideFields>({
+		preview: isPreview,
 		referenceName: slidesRef,
 		languageCode,
 		take: 25

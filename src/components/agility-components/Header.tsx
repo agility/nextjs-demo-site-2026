@@ -16,11 +16,12 @@ interface IHeader {
  * @param {UnloadedModuleProps} props - The properties passed to the component.
  * @returns {JSX.Element} The rendered header section.
  */
-export const Header = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const Header = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: { subheading, heading, description },
 		contentID,
 	} = await getContentItem<IHeader>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

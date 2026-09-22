@@ -25,6 +25,8 @@ interface LoadPostsProp {
 	locale: string
 	skip: number
 	take: number
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -32,7 +34,7 @@ interface LoadPostsProp {
  * @param param0
  * @returns
  */
-export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsProp) => {
+export const getPostListing = async ({ sitemap, locale, skip, take, preview = false }: LoadPostsProp) => {
 
 
 	try {
@@ -41,12 +43,14 @@ export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsP
 
 		// get sitemap...
 		const sitemapNodes = await getSitemapFlat({
+			preview,
 			channelName: sitemap,
 			languageCode: locale,
 		})
 
 		// get posts...
 		const rawPosts: ContentList = await getContentList<IPost>({
+			preview,
 			referenceName: "posts",
 			languageCode: locale,
 			contentLinkDepth: 2,

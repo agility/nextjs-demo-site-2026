@@ -28,9 +28,13 @@ export default async function LocaleLayout({
 }: LayoutProps) {
   const { locale } = await params
 
+  // Resolve preview FIRST — it is request state (draft mode), and every read
+  // below needs it to decide between the cached published path and an uncached
+  // preview read. This is the only await that has to happen before the fan-out.
+  const { isDevelopmentMode, isPreview } = await getAgilityContext(locale)
+
   // These CMS calls are independent — run them in parallel to avoid a request waterfall.
   const [
-    { isDevelopmentMode, isPreview },
     header,
     footer,
     audiences,
@@ -38,13 +42,12 @@ export default async function LocaleLayout({
     aiConfig,
     settings,
   ] = await Promise.all([
-    getAgilityContext(locale),
-    getHeaderContent({ locale }),
-    getFooterContent({ locale }),
-    getAudienceListing({ locale, skip: 0, take: 10 }),
-    getRegionListing({ locale, skip: 0, take: 10 }),
-    getAISearchConfig({ locale }),
-    getSettings({ locale }),
+    getHeaderContent({ locale, preview: isPreview }),
+    getFooterContent({ locale, preview: isPreview }),
+    getAudienceListing({ locale, skip: 0, take: 10, preview: isPreview }),
+    getRegionListing({ locale, skip: 0, take: 10, preview: isPreview }),
+    getAISearchConfig({ locale, preview: isPreview }),
+    getSettings({ locale, preview: isPreview }),
   ])
   const gaId = settings?.googleAnalyticsID || null
 

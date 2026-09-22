@@ -30,6 +30,8 @@ interface IHeader {
 
 interface Props {
 	locale: string
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -39,7 +41,7 @@ interface Props {
  * @param {Props} { locale }
  * @return {*}
  */
-export const getHeaderContent = async ({ locale }: Props) => {
+export const getHeaderContent = async ({ locale, preview = false }: Props) => {
 
 	// set up content item
 	let contentItem: ContentItem<IHeader> | null = null
@@ -49,6 +51,7 @@ export const getHeaderContent = async ({ locale }: Props) => {
 	try {
 		// try to fetch our site header
 		const header = await getContentList<IHeader>({
+			preview,
 			referenceName: "header",
 			languageCode: locale,
 			take: 1,
@@ -74,6 +77,7 @@ export const getHeaderContent = async ({ locale }: Props) => {
 
 		//get the nav links
 		const navLinks = await getContentList<ILink>({
+			preview,
 			referenceName: contentItem.fields.navigation.referencename,
 			languageCode: locale,
 			contentLinkDepth: 1, // we only want the first level of links

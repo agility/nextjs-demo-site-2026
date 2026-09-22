@@ -6,6 +6,8 @@ interface LoadRegionsProp {
 	locale: string
 	skip: number
 	take: number
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -13,13 +15,14 @@ interface LoadRegionsProp {
  * @param param0
  * @returns
  */
-export const getRegionListing = async ({ locale, skip, take }: LoadRegionsProp): Promise<IRegion[]> => {
+export const getRegionListing = async ({ locale, skip, take, preview = false }: LoadRegionsProp): Promise<IRegion[]> => {
 
 	try {
 
 
 		// get regions...
 		const rawRegions: ContentList = await getContentList<IRegion>({
+			preview,
 			referenceName: "regions",
 			languageCode: locale,
 			contentLinkDepth: 2,

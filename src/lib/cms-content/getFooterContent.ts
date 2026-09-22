@@ -47,6 +47,8 @@ export interface IFooter {
 
 interface Props {
 	locale: string
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -55,7 +57,7 @@ interface Props {
  * @param {Props} { locale }
  * @return {*}
  */
-export const getFooterContent = async ({ locale }: Props): Promise<IFooter | null> => {
+export const getFooterContent = async ({ locale, preview = false }: Props): Promise<IFooter | null> => {
 
 	// set up content item
 	let contentItem: ContentItem<IFooterItem> | null = null
@@ -74,6 +76,7 @@ export const getFooterContent = async ({ locale }: Props): Promise<IFooter | nul
 		*/
 
 		const footer = await getContentList<IFooterItem>({
+			preview,
 			referenceName: "footer",
 			languageCode: locale,
 			take: 1,

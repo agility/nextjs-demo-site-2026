@@ -5,6 +5,8 @@ import { type RegionWithContentID, transformContentItemsWithContentID } from "..
 
 interface LoadRegionsProp {
 	locale: string
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -13,11 +15,12 @@ interface LoadRegionsProp {
  * @param param0
  * @returns
  */
-export const getRegionListingWithContentID = async ({ locale }: LoadRegionsProp): Promise<RegionWithContentID[]> => {
+export const getRegionListingWithContentID = async ({ locale, preview = false }: LoadRegionsProp): Promise<RegionWithContentID[]> => {
 
 	try {
 		// get regions...
 		const rawRegions: ContentList = await getContentList<IRegion>({
+			preview,
 			referenceName: "regions",
 			languageCode: locale,
 			contentLinkDepth: 2,
