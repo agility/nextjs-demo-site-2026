@@ -310,20 +310,91 @@ const nestedItems = await getContentList<NestedType>({
 
 **IMPORTANT**: For nested grid/link fields, you must fetch separately using `referencename`. For search list box/dropdown/checkbox linked content, the SDK auto-populates the field - no separate fetch needed.
 
-### Caching Strategy
+### Caching Strategy — Cache Components
 
-- **Automatic**: All `getContentItem()`/`getContentList()` calls include Next.js cache tags
-- **Cache Tags**: Format is `agility-content-{contentID|referenceName}-{locale}` (e.g., `agility-content-123-en-us`)
-- **Revalidation**: 60-second cache + tag-based invalidation via `/api/revalidate`
-- **Sitemap Caching**: Tags like `agility-sitemap-flat-{locale}` and `agility-sitemap-nested-{locale}`
-- **Page Caching**: Tags like `agility-page-{pageID}-{locale}`
-- **Environment**: Use `src/lib/env.ts` for strongly-typed env vars (never `process.env` directly)
+`cacheComponents: true` is on (`next.config.mjs`). Every route is partially
+prerendered: a static shell, with request-time parts streamed in.
+
+**The rule that matters: `preview` is an explicit parameter, never ambient state.**
+`draftMode()` is read in exactly ONE place — `getAgilityContext()` — and threaded
+down as a boolean. If you reintroduce a `draftMode()` call inside `src/lib/cms/`,
+every content read becomes request-scoped and the whole site stops prerendering.
+
+Each primitive in `src/lib/cms/` splits two ways:
+- **published** → `"use cache"` + `cacheTag(...)` + `cacheLife("days")`
+- **preview** → `await connection()` then an uncached fetch
+
+| Primitive | Cache tag |
+|---|---|
+| `getContentItem` | `agility-content-{contentID}-{locale}` |
+| `getContentList` | `agility-content-{refName.toLowerCase()}-{locale}` |
+| `getPage` | `agility-page-{pageID}-{locale}` |
+| `getSitemapFlat` | `agility-sitemap-flat-{locale}` |
+| `getSitemapNested` | `agility-sitemap-nested-{locale}` |
+
+**These tag strings are a CONTRACT with `/api/revalidate`.** Change one and you must
+change the webhook in the same commit, or publishing silently stops invalidating.
+
+`getAgilityPage` composes these primitives (sitemap → node → page → dynamic item)
+rather than calling `getAgilityPageProps` from `@agility/nextjs/node`, which does
+its own uncached fetching and calls `Date.now()` — both fatal under Cache Components.
+It also normalizes `templateName` by stripping non-alphanumerics ("Main Template" →
+"MainTemplate"), because the CMS returns the display name and the registry is keyed
+by component name. **Get that wrong and the build stays green while every content
+zone renders empty.**
+
+**Route segment configs `revalidate` / `runtime` / `dynamic` / `dynamicParams` are
+rejected under `cacheComponents`.** Freshness comes from `cacheLife` plus the webhook.
+
+**No unstable values in render.** `new Date()`, `Date.now()` and `Math.random()`
+outside a cached scope fail the build. Wrap them in `"use cache"` (see
+`components/footer/copyright.tsx`) or move them to the client.
+
+**Environment**: Use `src/lib/env.ts` for strongly-typed env vars (never `process.env` directly).
+
+`FORCE_PUBLISHED=1 npm run dev` serves published content locally (dev serves staging by default).
 
 **Revalidation API** (`/api/revalidate`):
 - Receives webhook from Agility CMS on content publish
-- Automatically revalidates content tags, page tags, and paths
+- Revalidates content tags, page tags, and paths — `revalidateTag(tag, "max")`
+  (Next 16 requires the cacheLife profile argument)
 - Handles content items, pages, and redirects
-- Uses `revalidateTag()` and `revalidatePath()` from Next.js
+
+### 404s and CDN caching live in `src/proxy.ts`
+
+**404s are decided in the proxy, not by `notFound()`.** Under Cache Components the
+static shell — and a `200` status line — can be on the wire before a page resolves
+the sitemap, so `notFound()` produces a *soft* 404. The proxy validates each path
+against the published flat sitemap and answers 404 itself. It is skipped in dev and
+draft mode, and **fails open** if Agility is unreachable.
+
+**Adding a hand-written route under `app/`? Add it to `APP_PATHS` or `APP_PREFIXES`
+in `src/lib/cms/publishedPaths.ts`**, or it will 404 in production while working
+perfectly in `next dev`.
+
+`publishedPaths.ts` deliberately does not reuse `getSitemapFlat` — `"use cache"` and
+`cacheTag()` only work inside a render or cache scope, and throw in the proxy.
+
+**Cache headers are set in the proxy, not `next.config`**, because the proxy can see
+the draft cookie: draft renders get `private, no-store`, everything else gets
+`CDN-Cache-Control: public, s-maxage=60, stale-while-revalidate=86400`.
+
+### Preview must survive a CDN cache hit
+
+`?agilitypreviewkey=` and `?ContentID=` are handled **twice on purpose**: by the proxy
+(uncached requests) and by `beforeFiles` rewrites in `next.config.mjs` (cached ones).
+Vercel and Netlify serve prerendered pages straight from the edge without invoking the
+proxy, so without the rewrites preview silently shows published content on exactly the
+pages that matter most. Do not "simplify" this by deleting one side.
+
+### Machine-readable surfaces
+
+- `/llms.txt` — llmstxt.org index; curated prose plus a page list generated from the sitemap
+- `/{any-page}.md` — the page as clean markdown (proxy rewrites to `/api/page-md/...`)
+- `/api/mcp` — MCP server: `list_pages`, `get_page`, `search_content`.
+  Imports `zod4` (aliased to `zod@^4` in package.json) because the MCP SDK needs zod 4
+  while the AI SDK pins the project to zod 3. Do not change that import to `zod`.
+- JSON-LD uses one `@graph` with stable `@id`s — see `src/lib/seo/schema.ts`
 
 ### Image Handling with AgilityPic
 
