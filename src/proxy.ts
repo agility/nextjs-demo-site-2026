@@ -42,15 +42,16 @@ export async function proxy(request: NextRequest) {
 		const redirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/preview/exit?locale=${locale}&ContentID=${contentIDStr}&slug=${encodeURIComponent(slug)}`
 
 		return NextResponse.redirect(redirectUrl)
-	} else if (contentIDStr) {
+	} else if (contentIDStr && parseInt(contentIDStr) > 0) {
+		//*** this is a dynamic page request ***
+		//NOTE: the validity check lives in the condition, not inside the block. When
+		//it was nested, a junk ?ContentID= (e.g. "?ContentID=abc") matched this arm
+		//of the else-if chain, did nothing, and fell straight to NextResponse.next()
+		//- skipping locale routing entirely, so the page 404'd.
 		const contentID = parseInt(contentIDStr)
-		if (!isNaN(contentID) && contentID > 0) {
-			//*** this is a dynamic page request ***
+		const dynredirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/dynamic-redirect?ContentID=${contentID}&slug=${encodeURIComponent(request.nextUrl.pathname)}`
+		return NextResponse.rewrite(dynredirectUrl)
 
-			const dynredirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/dynamic-redirect?ContentID=${contentID}`
-			return NextResponse.rewrite(dynredirectUrl)
-
-		}
 	} else if ((!ext || ext.length === 0)) {
 
 		/**********************
@@ -89,7 +90,6 @@ export async function proxy(request: NextRequest) {
 		 **************************************/
 
 		//handle the case where ?lang=xx is passed in the querystring
-		const langQ = request.nextUrl.searchParams.get("lang")
 		const langParam = request.nextUrl.searchParams.get("lang")
 		//get the current locale from the pathname (if any)
 

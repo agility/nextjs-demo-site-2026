@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-	experimental: {
-		viewTransition: true,
-		// ppr: true, // PPR requires Next.js canary - using manual Suspense pattern instead
-	},
+	// NOTE: `experimental.viewTransition` was removed here. React 19.3 stabilized
+	// <ViewTransition>, so Next 16.3 no longer recognizes the flag and warns about
+	// it on boot. The components import the stable export from "react" directly.
 	poweredByHeader: false,
 	compress: true,
 	compiler: {
@@ -63,6 +62,52 @@ const nextConfig = {
 				permanent: true,
 			},
 		]
+	},
+	async rewrites() {
+		// *** Preview + deep links must survive a CDN cache hit. ***
+		//
+		// src/proxy.ts also handles ?agilitypreviewkey= and ?ContentID=, but the
+		// proxy is a Node function that Vercel and Netlify DO NOT invoke when they
+		// serve a page straight from the edge cache — which is exactly what happens
+		// to every prerendered page. So on the pages that matter most, the preview
+		// key never reached /api/preview, draft mode was never enabled, and Web
+		// Studio silently rendered PUBLISHED content. Same story for ?ContentID=
+		// deep links, which landed on the cached page instead of resolving the item.
+		//
+		// A `has`-matched `beforeFiles` rewrite is compiled into the platform's
+		// routes manifest and evaluated BEFORE the cache lookup, so it always
+		// reaches the route handler. Ported from Agility-Website-Nextjs-2026.
+		//
+		// Both paths are kept on purpose: the proxy covers uncached requests (where
+		// it runs first), these rewrites cover cached ones. They converge on the
+		// same handlers, so there is no double-handling.
+		//
+		// The (?!api) guard keeps /api/preview itself from matching and looping.
+		// The incoming query string is carried over automatically, so
+		// agilitypreviewkey / lang / ContentID all arrive; only `slug` is added.
+		return {
+			beforeFiles: [
+				{
+					source: "/:path((?!api).*)",
+					has: [{ type: "query", key: "agilitypreviewkey" }],
+					destination: "/api/preview?slug=/:path",
+				},
+				{
+					source: "/:path((?!api).*)",
+					// anchored: `has.value` is a regex, so a bare "0" would also match "10"
+					has: [{ type: "query", key: "AgilityPreview", value: "^0$" }],
+					destination: "/api/preview/exit?slug=/:path",
+				},
+				{
+					source: "/:path((?!api).*)",
+					has: [{ type: "query", key: "ContentID" }],
+					// `slug` lets the handler fall back to the requested page when the
+					// ContentID is not a resolvable item. The proxy could check
+					// `contentID > 0` before rewriting; a static rewrite cannot.
+					destination: "/api/dynamic-redirect?slug=/:path",
+				},
+			],
+		}
 	},
 	async headers() {
 		return [
