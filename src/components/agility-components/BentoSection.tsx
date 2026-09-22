@@ -36,7 +36,7 @@ export const BentoSection = async ({ module, languageCode }: UnloadedModuleProps
 	})
 
 	//now go get the bento cards
-	let bentoCards = await getContentList<IBentoCard>({
+	const bentoCards = await getContentList<IBentoCard>({
 		referenceName: cardsReferenceName,
 		languageCode,
 		take: 20, // adjust as needed

@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation"
 import { Logo } from "../logo"
 import { PlusGridItem } from "../plus-grid"
 import { localizeUrl, localizeUrlField } from '@/lib/i18n/localizeUrl'
-import { type Locale } from '@/lib/i18n/config'
+import type { Locale } from '@/lib/i18n/config'
 
 
 

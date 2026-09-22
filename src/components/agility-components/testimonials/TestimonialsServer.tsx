@@ -22,7 +22,7 @@ export const Testimonials = async ({ module, languageCode }: UnloadedModuleProps
 	})
 
 	// Fetch the testimonials list
-	let testimonials = await getContentList<ITestimonial>({
+	const testimonials = await getContentList<ITestimonial>({
 		referenceName: testimonialsReferenceName,
 		languageCode,
 		take: 20, // adjust as needed

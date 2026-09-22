@@ -1,6 +1,6 @@
 import getAgilitySDK from "@/lib/cms/getAgilitySDK"
 
-import { type SitemapFlatRequestParams } from "@agility/content-fetch/dist/methods/getSitemapFlat"
+import type { SitemapFlatRequestParams } from "@agility/content-fetch/dist/methods/getSitemapFlat"
 
 /**
  * Get the flat sitemap for the given language code, with caching information added.

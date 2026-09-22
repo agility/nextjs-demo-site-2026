@@ -30,21 +30,21 @@ Our team will:
 
 **Essential File Relationships**:
 
-- `src/middleware.ts` → Handles preview, redirects, i18n routing
+- `src/proxy.ts` → Handles preview, redirects, i18n routing (Next 16 renamed the `middleware` convention to `proxy`; runtime is always Node)
 - `src/lib/cms/` → All CMS API abstractions with caching
 - `src/components/agility-components/` → CMS-bound components (see `BentoSection.tsx` for nested data pattern)
 
 ## Technology Stack
 
-- **Framework**: Next.js 15.5.3 with App Router, React 19, TypeScript, Turbopack dev server
-- **Frontend**: React 19.1.0 with hooks for state management
+- **Framework**: Next.js 16.3.5 with App Router, React 19.3, TypeScript, Turbopack (default for both `dev` and `build`)
+- **Frontend**: React 19.3.0 with hooks for state management
 - **Styling**: Tailwind CSS v4 (CSS-file based, no config file) + Motion animations
-- **CMS**: Agility CMS (@agility/nextjs 15.0.7) with custom caching layer
+- **CMS**: Agility CMS (@agility/nextjs 16.0.8) with custom caching layer
 - **Animations**: Motion (Framer Motion alternative) 12.23.0
 - **Icons**: Heroicons v2, React Icons
 - **AI Features**: Azure/OpenAI integration with Algolia search (`/api/ai/search`)
 - **Analytics**: PostHog integration with environment validation
-- **Development**: Turbopack dev server, ESLint, Prettier
+- **Development**: Turbopack, ESLint 9 (flat config in `eslint.config.mjs`), Prettier
 
 ## Project Structure
 
@@ -95,11 +95,11 @@ src/
 
 ## Development Commands
 
-- `npm run dev` - Start development server with Turbopack
+- `npm run dev` - Start development server (Turbopack is the default in Next 16 — no `--turbopack` flag needed)
 - `npm run prebuild` - Rebuild redirect cache (run before build)
 - `npm run build` - Build for production
 - `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+- `npm run lint` - Run ESLint (`eslint .`; `next lint` was removed in Next 16 and `next build` no longer lints)
 
 **Critical Pre-build Step**: `tsx node/prebuild.ts` rebuilds redirect cache from bloom filters
 
@@ -428,7 +428,7 @@ import { renderHTML } from "@agility/nextjs"
 
 ## Internationalization & Routing
 
-**Middleware Flow** (`src/middleware.ts`):
+**Proxy Flow** (`src/proxy.ts`):
 
 1. **Preview Mode Detection**: Checks for `agilitypreviewkey` param → redirects to `/api/preview`
 2. **Exit Preview**: Handles `AgilityPreview=0` → redirects to `/api/preview/exit`
@@ -703,7 +703,7 @@ import { unstable_ViewTransition as ViewTransition } from 'react'
 - Test responsiveness with Tailwind's mobile-first approach
 - Use `src/lib/env.ts` for all environment variable access (never `process.env` directly)
 - Check `BentoSection.tsx` for nested content fetching examples
-- Review `src/middleware.ts` for routing and preview logic
+- Review `src/proxy.ts` for routing and preview logic
 - Register new components in `src/components/agility-components/index.ts`
 - Use `getAgilityContext()` to get locale, preview mode, and SDK config
 - Use `getAgilityPage()` to fetch page data with search params support

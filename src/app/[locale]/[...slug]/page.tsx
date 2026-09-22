@@ -6,7 +6,7 @@ import agilitySDK from "@agility/content-fetch"
 import type { Metadata, ResolvingMetadata } from "next"
 
 import { resolveAgilityMetaData } from "@/lib/cms-content/resolveAgilityMetaData"
-import { type SitemapNode } from "@/lib/types/SitemapNode"
+import type { SitemapNode } from "@/lib/types/SitemapNode"
 import { notFound } from "next/navigation"
 import InlineError from "@/components/InlineError"
 import { locales } from "@/lib/i18n/config"

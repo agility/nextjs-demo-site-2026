@@ -1,4 +1,4 @@
-import { type ContentItem, type ImageField, type URLField } from "@agility/nextjs"
+import type { ContentItem, ImageField, URLField } from "@agility/nextjs"
 import { getContentList } from "@/lib/cms/getContentList"
 
 export interface IFooterLink {
@@ -73,7 +73,7 @@ export const getFooterContent = async ({ locale }: Props): Promise<IFooter | nul
 		That's ok for this use case, since footers are not updated often.
 		*/
 
-		let footer = await getContentList<IFooterItem>({
+		const footer = await getContentList<IFooterItem>({
 			referenceName: "footer",
 			languageCode: locale,
 			take: 1,

@@ -1,6 +1,6 @@
-import { type ContentList, type ContentItem } from "@agility/content-fetch"
+import type { ContentList, ContentItem } from "@agility/content-fetch"
 import { getContentList } from "@/lib/cms/getContentList"
-import { type IRegion } from "../types/IRegion"
+import type { IRegion } from "../types/IRegion"
 
 interface LoadRegionsProp {
 	locale: string
@@ -19,7 +19,7 @@ export const getRegionListing = async ({ locale, skip, take }: LoadRegionsProp):
 
 
 		// get regions...
-		let rawRegions: ContentList = await getContentList<IRegion>({
+		const rawRegions: ContentList = await getContentList<IRegion>({
 			referenceName: "regions",
 			languageCode: locale,
 			contentLinkDepth: 2,

@@ -1,6 +1,6 @@
-import { type ContentList, type ContentItem } from "@agility/content-fetch"
+import type { ContentList, ContentItem } from "@agility/content-fetch"
 import { getContentList } from "@/lib/cms/getContentList"
-import { type IAudience } from "../types/IAudience"
+import type { IAudience } from "../types/IAudience"
 import { type AudienceWithContentID, transformContentItemsWithContentID } from "../utils/audienceRegionUtils"
 
 interface LoadAudiencesProp {
@@ -17,7 +17,7 @@ export const getAudienceListingWithContentID = async ({ locale }: LoadAudiencesP
 
 	try {
 		// get audiences...
-		let rawAudiences: ContentList = await getContentList<IAudience>({
+		const rawAudiences: ContentList = await getContentList<IAudience>({
 			referenceName: "audiences",
 			languageCode: locale,
 			contentLinkDepth: 2,

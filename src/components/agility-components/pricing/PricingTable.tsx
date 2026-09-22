@@ -247,7 +247,7 @@ export const PricingTable = async ({ module, languageCode, globalData }: Unloade
 												{name}
 											</th>
 											{tiers.map((tier) => {
-												let value = tier.features.find(
+												const value = tier.features.find(
 													(feature) =>
 														feature.section === section && feature.name === name,
 												)?.value

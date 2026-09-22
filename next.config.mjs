@@ -10,9 +10,17 @@ const nextConfig = {
 		removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
 	},
 	images: {
+		formats: ["image/avif", "image/webp"],
+		// Next 16 raised the default from 60s to 4h. Every optimized image here
+		// originates from the Agility CDN, whose URL changes when the asset does,
+		// so a long TTL is safe and cuts re-optimization cost. NOTE: there is no
+		// way to invalidate this cache — if an editor overwrites a media file at
+		// the SAME url, the old render can persist. 31 days.
+		minimumCacheTTL: 2678400,
 		remotePatterns: [
 			{ protocol: "https", hostname: "**.agilitycms.com" },
 			{ protocol: "https", hostname: "cdn.agilitycms.com" },
+			{ protocol: "https", hostname: "*.aglty.io" },
 		],
 	},
 	async redirects() {

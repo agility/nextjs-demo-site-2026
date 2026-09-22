@@ -14,7 +14,7 @@ interface PaginationProps {
 
 export async function Pagination({ page, category, totalPosts, postsPerPage, languageCode }: PaginationProps) {
 	function url(page: number) {
-		let params = new URLSearchParams()
+		const params = new URLSearchParams()
 
 		if (category) params.set('category', category)
 		if (page > 1) params.set('page', page.toString())
@@ -25,11 +25,11 @@ export async function Pagination({ page, category, totalPosts, postsPerPage, lan
 	}
 
 
-	let hasPreviousPage = page - 1
-	let previousPageUrl = hasPreviousPage ? url(page - 1) : undefined
-	let hasNextPage = page * postsPerPage < totalPosts
-	let nextPageUrl = hasNextPage ? url(page + 1) : undefined
-	let pageCount = Math.ceil(totalPosts / postsPerPage)
+	const hasPreviousPage = page - 1
+	const previousPageUrl = hasPreviousPage ? url(page - 1) : undefined
+	const hasNextPage = page * postsPerPage < totalPosts
+	const nextPageUrl = hasNextPage ? url(page + 1) : undefined
+	const pageCount = Math.ceil(totalPosts / postsPerPage)
 	if (pageCount < 2) {
 		return
 	}

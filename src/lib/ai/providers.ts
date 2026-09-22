@@ -1,6 +1,6 @@
 import { createAzure, type AzureOpenAIProvider } from '@ai-sdk/azure'
 import { createOpenAI } from '@ai-sdk/openai'
-import { type LanguageModel } from 'ai'
+import type { LanguageModel } from 'ai'
 
 // Create the Azure OpenAI provider if we have the necessary environment variables
 const azure: AzureOpenAIProvider | null = process.env.AZURE_AI_RESOURCE ? createAzure({

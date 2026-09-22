@@ -1,6 +1,6 @@
-import { type ContentItemRequestParams } from "@agility/content-fetch/dist/methods/getContentItem"
+import type { ContentItemRequestParams } from "@agility/content-fetch/dist/methods/getContentItem"
 import getAgilitySDK from "@/lib/cms/getAgilitySDK"
-import { type ContentItem } from "@agility/content-fetch"
+import type { ContentItem } from "@agility/content-fetch"
 import { env } from "@/lib/env"
 
 /**

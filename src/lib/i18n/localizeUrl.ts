@@ -1,4 +1,4 @@
-import { type URLField } from "@agility/nextjs"
+import type { URLField } from "@agility/nextjs"
 import { type Locale, defaultLocale, locales, getLocaleFromPathname, removeLocaleFromPathname } from "./config"
 
 /**

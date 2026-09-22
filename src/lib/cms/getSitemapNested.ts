@@ -1,6 +1,6 @@
 import getAgilitySDK from "@/lib/cms/getAgilitySDK"
 
-import { type SitemapNestedRequestParams } from "@agility/content-fetch/dist/methods/getSitemapNested"
+import type { SitemapNestedRequestParams } from "@agility/content-fetch/dist/methods/getSitemapNested"
 
 /**
  * Get the nested sitemap for the given language code, with caching information added.

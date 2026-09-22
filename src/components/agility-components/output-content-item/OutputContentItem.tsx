@@ -1,5 +1,5 @@
 "use client"
-import { type ContentItem } from "@agility/content-fetch"
+import type { ContentItem } from "@agility/content-fetch"
 
 import OutputField from "./OutputField"
 import RawContentItem from "./RawContentItem"

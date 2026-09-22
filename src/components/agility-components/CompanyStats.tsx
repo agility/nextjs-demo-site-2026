@@ -84,7 +84,7 @@ export const CompanyStats = async ({ module, languageCode }: UnloadedModuleProps
 	})
 
 	// Fetch the stats from the content list
-	let statsData = await getContentList<IStat>({
+	const statsData = await getContentList<IStat>({
 		referenceName: statsReferenceName,
 		languageCode,
 		take: 20, // adjust as needed

@@ -1,6 +1,6 @@
-import { type AgilityPageProps } from "@agility/nextjs"
+import type { AgilityPageProps } from "@agility/nextjs"
 import ReactHtmlParser from "html-react-parser"
-import { type Metadata } from "next"
+import type { Metadata } from "next"
 export const getPageMetaData = (agilityPage: AgilityPageProps) => {
 
 	const metaHTML = agilityPage.page?.seo?.metaHTML
@@ -11,7 +11,7 @@ export const getPageMetaData = (agilityPage: AgilityPageProps) => {
 		additionalHeaderMarkup = ReactHtmlParser(metaHTML)
 	}
 
-	let metadata: Metadata = {
+	const metadata: Metadata = {
 		title: agilityPage.sitemapNode?.title,
 		description: agilityPage.page?.seo?.metaDescription,
 		keywords: agilityPage.page?.seo?.metaKeywords,

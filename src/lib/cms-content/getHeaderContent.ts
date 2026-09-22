@@ -1,4 +1,4 @@
-import { type ContentItem, type ImageField, type URLField } from "@agility/nextjs"
+import type { ContentItem, ImageField, URLField } from "@agility/nextjs"
 import { getContentList } from "@/lib/cms/getContentList"
 
 interface ISubNavLink {
@@ -48,7 +48,7 @@ export const getHeaderContent = async ({ locale }: Props) => {
 
 	try {
 		// try to fetch our site header
-		let header = await getContentList<IHeader>({
+		const header = await getContentList<IHeader>({
 			referenceName: "header",
 			languageCode: locale,
 			take: 1,
@@ -73,7 +73,7 @@ export const getHeaderContent = async ({ locale }: Props) => {
 	try {
 
 		//get the nav links
-		let navLinks = await getContentList<ILink>({
+		const navLinks = await getContentList<ILink>({
 			referenceName: contentItem.fields.navigation.referencename,
 			languageCode: locale,
 			contentLinkDepth: 1, // we only want the first level of links

@@ -18,13 +18,13 @@ export function AnimatedNumber({
   end: number
   decimals?: number
 }) {
-  let ref = useRef(null)
+  const ref = useRef(null)
 
-  let isInView = useInView(ref, { once: true, amount: 0.5 })
+  const isInView = useInView(ref, { once: true, amount: 0.5 })
 
-  let value = useMotionValue(start)
-  let spring = useSpring(value, { damping: 30, stiffness: 100 })
-  let display = useTransform(spring, (num) => num.toFixed(decimals))
+  const value = useMotionValue(start)
+  const spring = useSpring(value, { damping: 30, stiffness: 100 })
+  const display = useTransform(spring, (num) => num.toFixed(decimals))
 
   useEffect(() => {
     value.set(isInView ? end : start)

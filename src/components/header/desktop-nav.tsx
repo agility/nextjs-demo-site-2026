@@ -5,7 +5,7 @@ import Link from "next/link"
 import { PlusGridIcon, PlusGridItem } from "../plus-grid"
 import React, { useState } from 'react'
 import { localizeUrlField } from '@/lib/i18n/localizeUrl'
-import { type Locale } from '@/lib/i18n/config'
+import type { Locale } from '@/lib/i18n/config'
 import {
 	Dialog,
 	DialogPanel,

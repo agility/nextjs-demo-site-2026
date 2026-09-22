@@ -1,4 +1,4 @@
-import { type ContentItem } from "@agility/nextjs"
+import type { ContentItem } from "@agility/nextjs"
 import { getContentList } from "@/lib/cms/getContentList"
 
 interface IAISearchConfig {
@@ -91,7 +91,7 @@ Keep responses informative and helpful. Use the search tool results to provide a
 
 	try {
 		// try to fetch our AI search configuration (reference name is case-sensitive)
-		let aiConfig = await getContentList<IAISearchConfig>({
+		const aiConfig = await getContentList<IAISearchConfig>({
 			referenceName: "aisearchconfiguration",
 			languageCode: locale,
 			take: 1,

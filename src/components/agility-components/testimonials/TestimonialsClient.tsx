@@ -35,28 +35,28 @@ function TestimonialCard({
 	bounds: RectReadOnly
 	scrollX: MotionValue<number>
 } & HTMLMotionProps<'div'>) {
-	let ref = useRef<HTMLDivElement | null>(null)
+	const ref = useRef<HTMLDivElement | null>(null)
 
-	let computeOpacity = useCallback(() => {
-		let element = ref.current
+	const computeOpacity = useCallback(() => {
+		const element = ref.current
 		if (!element || bounds.width === 0) return 1
 
-		let rect = element.getBoundingClientRect()
+		const rect = element.getBoundingClientRect()
 
 		if (rect.left < bounds.left) {
-			let diff = bounds.left - rect.left
-			let percent = diff / rect.width
+			const diff = bounds.left - rect.left
+			const percent = diff / rect.width
 			return Math.max(0.5, 1 - percent)
 		} else if (rect.right > bounds.right) {
-			let diff = rect.right - bounds.right
-			let percent = diff / rect.width
+			const diff = rect.right - bounds.right
+			const percent = diff / rect.width
 			return Math.max(0.5, 1 - percent)
 		} else {
 			return 1
 		}
 	}, [ref, bounds.width, bounds.left, bounds.right])
 
-	let opacity = useSpring(computeOpacity(), {
+	const opacity = useSpring(computeOpacity(), {
 		stiffness: 154,
 		damping: 23,
 	})
@@ -139,10 +139,10 @@ export function TestimonialsClient({
 	testimonials,
 	contentID
 }: ITestimonialsClient) {
-	let scrollRef = useRef<HTMLDivElement | null>(null)
-	let { scrollX } = useScroll({ container: scrollRef })
-	let [setReferenceWindowRef, bounds] = useMeasure()
-	let [activeIndex, setActiveIndex] = useState(0)
+	const scrollRef = useRef<HTMLDivElement | null>(null)
+	const { scrollX } = useScroll({ container: scrollRef })
+	const [setReferenceWindowRef, bounds] = useMeasure()
+	const [activeIndex, setActiveIndex] = useState(0)
 
 	useMotionValueEvent(scrollX, 'change', (x) => {
 		if (scrollRef.current && scrollRef.current.children[0]) {
@@ -153,8 +153,8 @@ export function TestimonialsClient({
 	function scrollTo(index: number) {
 		if (!scrollRef.current) return
 
-		let gap = 32
-		let width = (scrollRef.current.children[0] as HTMLElement).offsetWidth
+		const gap = 32
+		const width = (scrollRef.current.children[0] as HTMLElement).offsetWidth
 		scrollRef.current.scrollTo({ left: (width + gap) * index })
 	}
 

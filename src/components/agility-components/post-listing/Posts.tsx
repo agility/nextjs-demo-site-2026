@@ -1,4 +1,4 @@
-import { type IPostMin } from '@/lib/cms-content/getPostListing'
+import type { IPostMin } from '@/lib/cms-content/getPostListing'
 import { PostCard } from './PostCard'
 
 interface PostsProps {

@@ -23,7 +23,7 @@ export const getAgilityPage = async ({ params }: PageProps) => {
 
 	//check the last element of the slug to see if it has search params encoded (from middleware)
 	let lastSlug = awaitedParams.slug[awaitedParams.slug.length - 1]
-	let searchParams: { [key: string]: string } = {}
+	const searchParams: { [key: string]: string } = {}
 	if (lastSlug && lastSlug.startsWith("~~~") && lastSlug.endsWith("~~~")) {
 		//we have search params encoded here
 		lastSlug = lastSlug.replace(/~~~+/g, "")

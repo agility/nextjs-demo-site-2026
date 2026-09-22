@@ -1,9 +1,9 @@
 import { DateTime } from "luxon"
-import { type ContentList } from "@agility/content-fetch"
-import { type ImageField } from "@agility/nextjs"
+import type { ContentList } from "@agility/content-fetch"
+import type { ImageField } from "@agility/nextjs"
 import { getContentList } from "@/lib/cms/getContentList"
 import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
-import { type IPost } from "../types/IPost"
+import type { IPost } from "../types/IPost"
 import { defaultLocale, locales } from "@/lib/i18n/config"
 import { decodeHtmlEntities } from "@/lib/utils"
 
@@ -40,13 +40,13 @@ export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsP
 
 
 		// get sitemap...
-		let sitemapNodes = await getSitemapFlat({
+		const sitemapNodes = await getSitemapFlat({
 			channelName: sitemap,
 			languageCode: locale,
 		})
 
 		// get posts...
-		let rawPosts: ContentList = await getContentList<IPost>({
+		const rawPosts: ContentList = await getContentList<IPost>({
 			referenceName: "posts",
 			languageCode: locale,
 			contentLinkDepth: 2,
@@ -115,7 +115,7 @@ export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsP
 }
 
 const resolvePostUrls = function (sitemap: any, posts: any) {
-	let dynamicUrls: any = {};
+	const dynamicUrls: any = {};
 	posts.forEach((post: any) => {
 		Object.keys(sitemap).forEach((path) => {
 			if (sitemap[path].contentID === post.contentID) {

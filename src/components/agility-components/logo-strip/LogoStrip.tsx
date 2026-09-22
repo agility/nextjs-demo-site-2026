@@ -29,7 +29,7 @@ export const LogoStrip = async ({ module, languageCode }: UnloadedModuleProps) =
 	})
 
 	//now go get the logos
-	let logos = await getContentList<ILogoItem>({
+	const logos = await getContentList<ILogoItem>({
 		referenceName: logosReferenceName,
 		languageCode,
 		take: 20, // adjust as needed

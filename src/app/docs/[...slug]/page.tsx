@@ -242,23 +242,23 @@ export default async function DocsPage({ params }: { params: Promise<{ slug: str
 							// Resolve relative to current page's slug
 							const resolveRelativeLink = (relativeHref: string, currentSlug: string[]): string => {
 								// Get the directory of the current file (remove filename/README)
-								let baseDir = [...currentSlug]
+								const baseDir = [...currentSlug]
 								if (baseDir.length > 0) {
 									// Remove the last segment (filename or README) to get the directory
 									baseDir.pop()
 								}
 
 								// Remove .md or .mdx extension if present
-								let cleanHref = relativeHref.replace(/\.mdx?$/, '')
+								const cleanHref = relativeHref.replace(/\.mdx?$/, '')
 
 								// Check if this is a README link
 								const isReadmeLink = cleanHref.endsWith('/README') || cleanHref === 'README' || cleanHref.endsWith('./README') || cleanHref === './README'
 
 								// Split the relative path into segments
-								let segments = cleanHref.split('/').filter(s => s !== '' && s !== '.')
+								const segments = cleanHref.split('/').filter(s => s !== '' && s !== '.')
 
 								// Start with the base directory
-								let resolvedSlug = [...baseDir]
+								const resolvedSlug = [...baseDir]
 
 								// Process each segment
 								for (const segment of segments) {

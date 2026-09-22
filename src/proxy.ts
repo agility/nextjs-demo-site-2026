@@ -4,7 +4,7 @@ import { checkRedirect } from './lib/cms-content/checkRedirect'
 import { defaultLocale, locales, isValidLocale, getLocaleFromPathname, removeLocaleFromPathname } from './lib/i18n/config'
 
 // This function can be marked `async` if using `await` inside
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 
 
 	/*****************************
@@ -17,7 +17,7 @@ export async function middleware(request: NextRequest) {
 
 	let pathname = request.nextUrl.pathname
 	const previewQ = request.nextUrl.searchParams.get("AgilityPreview")
-	let contentIDStr = request.nextUrl.searchParams.get("ContentID") as string || ""
+	const contentIDStr = request.nextUrl.searchParams.get("ContentID") as string || ""
 
 	const ext = request.nextUrl.pathname.includes(".") ? request.nextUrl.pathname.split('.').pop() : null
 
@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
 		const locale = request.nextUrl.searchParams.get("lang")
 		const slug = request.nextUrl.pathname
 		//valid preview key: we need to redirect to the correct url for preview
-		let redirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/preview?locale=${locale}&ContentID=${contentIDStr}&slug=${encodeURIComponent(slug)}&agilitypreviewkey=${encodeURIComponent(agilityPreviewKey)}`
+		const redirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/preview?locale=${locale}&ContentID=${contentIDStr}&slug=${encodeURIComponent(slug)}&agilitypreviewkey=${encodeURIComponent(agilityPreviewKey)}`
 
 		return NextResponse.redirect(redirectUrl)
 
@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
 
 		//we need to redirect to the correct url for preview
 		const slug = request.nextUrl.pathname
-		let redirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/preview/exit?locale=${locale}&ContentID=${contentIDStr}&slug=${encodeURIComponent(slug)}`
+		const redirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/preview/exit?locale=${locale}&ContentID=${contentIDStr}&slug=${encodeURIComponent(slug)}`
 
 		return NextResponse.redirect(redirectUrl)
 	} else if (contentIDStr) {
@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
 		if (!isNaN(contentID) && contentID > 0) {
 			//*** this is a dynamic page request ***
 
-			let dynredirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/dynamic-redirect?ContentID=${contentID}`
+			const dynredirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/dynamic-redirect?ContentID=${contentID}`
 			return NextResponse.rewrite(dynredirectUrl)
 
 		}
@@ -136,7 +136,7 @@ export async function middleware(request: NextRequest) {
 
 		// Only encode if we have allowed params and they're within reasonable length
 		let searchParams = filteredParams.toString()
-		let hasSearchParams = searchParams && searchParams.length > 0 && searchParams.length <= MAX_QUERY_STRING_LENGTH
+		const hasSearchParams = searchParams && searchParams.length > 0 && searchParams.length <= MAX_QUERY_STRING_LENGTH
 
 		if (hasSearchParams) {
 			const searchParamPortion = `~~~${encodeURIComponent(searchParams)}~~~`
