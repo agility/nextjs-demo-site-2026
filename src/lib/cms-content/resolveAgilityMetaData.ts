@@ -1,6 +1,6 @@
-import { type AgilityPageProps, type ImageField } from "@agility/nextjs"
-import { type ContentItem } from "@agility/content-fetch"
-import { type Metadata, type ResolvingMetadata } from "next"
+import type { AgilityPageProps, ImageField } from "@agility/nextjs"
+import type { ContentItem } from "@agility/content-fetch"
+import type { Metadata, ResolvingMetadata } from "next"
 import { getHeaderContent } from "./getHeaderContent"
 
 import ReactHtmlParser from "html-react-parser"
@@ -17,7 +17,7 @@ interface Props {
 	parent: ResolvingMetadata
 }
 
-export const resolveAgilityMetaData = async ({ agilityData, locale, parent }: Props): Promise<Metadata> => {
+export const resolveAgilityMetaData = async ({ agilityData, locale, parent, isPreview }: Props): Promise<Metadata> => {
 
 
 	const header = await getHeaderContent({ locale })
@@ -37,6 +37,7 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent }: Pr
 		//get the content item for this dynamic page
 		try {
 			const contentItem: ContentItem = await getContentItem({
+				preview: isPreview,
 				contentID: agilityData.sitemapNode.contentID,
 				languageCode: locale,
 				locale
@@ -85,9 +86,9 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent }: Pr
 	//#endregion
 
 	//#region *** resolve the "additional" meta tags ***
-	let metaHTML = agilityData.page?.seo?.metaHTML
+	const metaHTML = agilityData.page?.seo?.metaHTML
 
-	let otherMetaData: { [name: string]: string } = {}
+	const otherMetaData: { [name: string]: string } = {}
 
 
 	if (metaHTML) {

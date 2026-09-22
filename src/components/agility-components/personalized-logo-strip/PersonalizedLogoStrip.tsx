@@ -17,7 +17,7 @@ interface ILogoItem {
 	logo: ImageField
 }
 
-export const PersonalizedLogoStrip = async ({ module, languageCode, globalData }: UnloadedModuleProps) => {
+export const PersonalizedLogoStrip = async ({ module, languageCode, globalData, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			ctaDescription,
@@ -26,12 +26,14 @@ export const PersonalizedLogoStrip = async ({ module, languageCode, globalData }
 		},
 		contentID,
 	} = await getContentItem<ILogoStrip>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
 
 	//now go get the customers
 	let customers = await getContentList<ICustomerProfile>({
+		preview: isPreview,
 		referenceName: logosReferenceName,
 		languageCode,
 		take: 250, // grab all of them so we can do the filtering here... TODO - do this filtering here...

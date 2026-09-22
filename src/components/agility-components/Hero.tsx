@@ -22,11 +22,12 @@ interface IHero {
  * @param {UnloadedModuleProps} props - The properties passed to the component.
  * @returns {JSX.Element} The rendered hero section.
  */
-export const Hero = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const Hero = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: { heading, description, callToAction, image, imagePosition = "right" },
 		contentID,
 	} = await getContentItem<IHero>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

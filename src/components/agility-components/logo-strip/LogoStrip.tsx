@@ -15,7 +15,7 @@ interface ILogoItem {
 	logo: ImageField
 }
 
-export const LogoStrip = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const LogoStrip = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			ctaDescription,
@@ -24,12 +24,14 @@ export const LogoStrip = async ({ module, languageCode }: UnloadedModuleProps) =
 		},
 		contentID,
 	} = await getContentItem<ILogoStrip>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
 
 	//now go get the logos
-	let logos = await getContentList<ILogoItem>({
+	const logos = await getContentList<ILogoItem>({
+		preview: isPreview,
 		referenceName: logosReferenceName,
 		languageCode,
 		take: 20, // adjust as needed

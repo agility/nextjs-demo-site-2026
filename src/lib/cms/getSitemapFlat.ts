@@ -1,24 +1,39 @@
+import "server-only";
+
+import { cacheLife, cacheTag } from "next/cache"
+import { connection } from "next/server"
+import type { SitemapFlatRequestParams } from "@agility/content-fetch/dist/methods/getSitemapFlat"
 import getAgilitySDK from "@/lib/cms/getAgilitySDK"
 
-import { type SitemapFlatRequestParams } from "@agility/content-fetch/dist/methods/getSitemapFlat"
+export type GetSitemapFlatParams = SitemapFlatRequestParams & {
+	/** Read staging content instead of published. Preview reads are NEVER cached. */
+	preview?: boolean
+}
 
 /**
- * Get the flat sitemap for the given language code, with caching information added.
- * @param params
- * @returns
+ * Get the flat sitemap (path -> node) for a locale.
+ *
+ * Published reads are cached and invalidated by /api/revalidate on any page or
+ * dynamic-item publish. The tag format is a CONTRACT with that webhook.
  */
-export const getSitemapFlat = async (params: SitemapFlatRequestParams) => {
+export const getSitemapFlat = async ({ preview = false, ...params }: GetSitemapFlatParams) => {
 
-
-	const agilitySDK = await getAgilitySDK()
-
-	agilitySDK.config.fetchConfig = {
-		next: {
-			tags: [`agility-sitemap-flat-${params.languageCode || params.locale}`],
-			revalidate: 60,
-		},
+	if (preview) {
+		await connection()
+		return fetchSitemapFlat(params, true)
 	}
 
-	return await agilitySDK.getSitemapFlat(params)
+	return cachedSitemapFlat(params)
+}
 
+const cachedSitemapFlat = async (params: SitemapFlatRequestParams) => {
+	"use cache"
+	cacheTag(`agility-sitemap-flat-${params.languageCode || params.locale}`)
+	cacheLife("days")
+	return fetchSitemapFlat(params, false)
+}
+
+const fetchSitemapFlat = async (params: SitemapFlatRequestParams, preview: boolean) => {
+	const agilitySDK = getAgilitySDK(preview)
+	return await agilitySDK.getSitemapFlat(params)
 }

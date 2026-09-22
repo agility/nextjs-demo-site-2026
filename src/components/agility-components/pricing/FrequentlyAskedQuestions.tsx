@@ -15,7 +15,7 @@ interface IFAQ {
 	answer: string
 }
 
-export const FrequentlyAskedQuestions = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const FrequentlyAskedQuestions = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			subheading = "Frequently asked questions",
@@ -24,12 +24,14 @@ export const FrequentlyAskedQuestions = async ({ module, languageCode }: Unloade
 		},
 		contentID,
 	} = await getContentItem<IFrequentlyAskedQuestions>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
 
 	// Get the FAQs
 	const faqsData = await getContentList<IFAQ>({
+		preview: isPreview,
 		referenceName: faqsReferenceName,
 		languageCode,
 		take: 100,

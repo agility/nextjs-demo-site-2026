@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { Link } from '@/components/link'
-import { type LinkProps } from 'next/link'
+import type { LinkProps } from 'next/link'
 import { forwardRef } from 'react'
 
 export const ViewTransitionLink = forwardRef<

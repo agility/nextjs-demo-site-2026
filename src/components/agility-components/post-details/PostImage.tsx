@@ -3,7 +3,7 @@
 import React from "react"
 import { AgilityPic, type ImageField } from "@agility/nextjs"
 import { createPostImageTransitionName } from "@/lib/hooks/useViewTransition"
-import { unstable_ViewTransition as ViewTransition } from 'react'
+import { ViewTransition } from 'react'
 
 interface PostImageProps {
 	image: ImageField

@@ -1,6 +1,6 @@
 import type { ImageField } from "@agility/nextjs"
 
 export interface IAuthor {
-	name: String
+	name: string
 	headShot: ImageField
 }

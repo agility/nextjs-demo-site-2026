@@ -1,10 +1,12 @@
-import { type ContentList, type ContentItem } from "@agility/content-fetch"
+import type { ContentList, ContentItem } from "@agility/content-fetch"
 import { getContentList } from "@/lib/cms/getContentList"
-import { type IRegion } from "../types/IRegion"
+import type { IRegion } from "../types/IRegion"
 import { type RegionWithContentID, transformContentItemsWithContentID } from "../utils/audienceRegionUtils"
 
 interface LoadRegionsProp {
 	locale: string
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -13,11 +15,12 @@ interface LoadRegionsProp {
  * @param param0
  * @returns
  */
-export const getRegionListingWithContentID = async ({ locale }: LoadRegionsProp): Promise<RegionWithContentID[]> => {
+export const getRegionListingWithContentID = async ({ locale, preview = false }: LoadRegionsProp): Promise<RegionWithContentID[]> => {
 
 	try {
 		// get regions...
-		let rawRegions: ContentList = await getContentList<IRegion>({
+		const rawRegions: ContentList = await getContentList<IRegion>({
+			preview,
 			referenceName: "regions",
 			languageCode: locale,
 			contentLinkDepth: 2,

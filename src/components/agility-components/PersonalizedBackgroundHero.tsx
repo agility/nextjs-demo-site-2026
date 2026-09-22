@@ -10,7 +10,7 @@ import type { IPersonalizedBackgroundHero, IPersonalizedBackgroundHeroItem } fro
 import { getAudienceContentID } from "@/lib/utils/audienceRegionUtils"
 import { PersonalizationTracker } from "../analytics/PersonalizationTracker"
 
-export const PersonalizedBackgroundHero = async ({ module, languageCode, globalData, page }: UnloadedModuleProps) => {
+export const PersonalizedBackgroundHero = async ({ module, languageCode, globalData, page, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			heading,
@@ -23,12 +23,14 @@ export const PersonalizedBackgroundHero = async ({ module, languageCode, globalD
 		},
 		contentID,
 	} = await getContentItem<IPersonalizedBackgroundHero>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
 
 	// Get the personalized hero items
 	const personalizedHeroItems = await getContentList<IPersonalizedBackgroundHeroItem>({
+		preview: isPreview,
 		referenceName: personalizedHeroItemsReferenceName,
 		languageCode,
 		take: 50,

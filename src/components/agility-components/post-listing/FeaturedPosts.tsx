@@ -3,7 +3,7 @@ import { Link } from '@/components/link'
 import dayjs from 'dayjs'
 
 export async function FeaturedPosts() {
-	let featuredPosts: any[] = []
+	const featuredPosts: any[] = []
 
 	if (featuredPosts.length === 0) {
 		return

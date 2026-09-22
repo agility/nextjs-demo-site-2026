@@ -21,7 +21,7 @@ This Next.js site implements multi-locale support through a combination of URL-b
 
 ## 3. Middleware Processing
 
-**[`src/middleware.ts`](https://github.com/agility/nextjs-demo-site-2025/blob/main/src/middleware.ts)**
+**[`src/proxy.ts`](https://github.com/agility/nextjs-demo-site-2025/blob/main/src/proxy.ts)**
 
 The middleware handles locale routing in this order:
 
@@ -101,7 +101,7 @@ Client-side component that:
 | File                                                                                                                                                | Purpose                                      |
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
 | [`src/lib/i18n/config.ts`](https://github.com/agility/nextjs-demo-site-2025/blob/main/src/lib/i18n/config.ts)                                       | Locale configuration and utilities           |
-| [`src/middleware.ts`](https://github.com/agility/nextjs-demo-site-2025/blob/main/src/middleware.ts)                                                 | URL routing and locale rewriting             |
+| [`src/proxy.ts`](https://github.com/agility/nextjs-demo-site-2025/blob/main/src/proxy.ts)                                                 | URL routing and locale rewriting             |
 | [`src/app/[locale]/[...slug]/page.tsx`](https://github.com/agility/nextjs-demo-site-2025/blob/main/src/app/[locale]/[...slug]/page.tsx)             | Dynamic page rendering and static generation |
 | [`src/components/footer/language-toggle.tsx`](https://github.com/agility/nextjs-demo-site-2025/blob/main/src/components/footer/language-toggle.tsx) | User-facing language switcher                |
 | [`src/lib/i18n/localizeUrl.ts`](https://github.com/agility/nextjs-demo-site-2025/blob/main/src/lib/i18n/localizeUrl.ts)                             | URL generation helpers                       |

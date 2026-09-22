@@ -1,6 +1,6 @@
 'use client'
 
-import { type UIMessage } from 'ai'
+import type { UIMessage } from 'ai'
 import { UserIcon, SparklesIcon } from '@heroicons/react/24/outline'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'

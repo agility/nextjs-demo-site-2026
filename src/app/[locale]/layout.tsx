@@ -16,6 +16,7 @@ import { getSettings } from '@/lib/cms-content/getSettings'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { AnalyticsProvider } from '@/components/analytics'
 import Script from 'next/script'
+import { graph, organization, webSite } from '@/lib/seo/schema'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -28,9 +29,13 @@ export default async function LocaleLayout({
 }: LayoutProps) {
   const { locale } = await params
 
+  // Resolve preview FIRST — it is request state (draft mode), and every read
+  // below needs it to decide between the cached published path and an uncached
+  // preview read. This is the only await that has to happen before the fan-out.
+  const { isDevelopmentMode, isPreview } = await getAgilityContext(locale)
+
   // These CMS calls are independent — run them in parallel to avoid a request waterfall.
   const [
-    { isDevelopmentMode, isPreview },
     header,
     footer,
     audiences,
@@ -38,13 +43,12 @@ export default async function LocaleLayout({
     aiConfig,
     settings,
   ] = await Promise.all([
-    getAgilityContext(locale),
-    getHeaderContent({ locale }),
-    getFooterContent({ locale }),
-    getAudienceListing({ locale, skip: 0, take: 10 }),
-    getRegionListing({ locale, skip: 0, take: 10 }),
-    getAISearchConfig({ locale }),
-    getSettings({ locale }),
+    getHeaderContent({ locale, preview: isPreview }),
+    getFooterContent({ locale, preview: isPreview }),
+    getAudienceListing({ locale, skip: 0, take: 10, preview: isPreview }),
+    getRegionListing({ locale, skip: 0, take: 10, preview: isPreview }),
+    getAISearchConfig({ locale, preview: isPreview }),
+    getSettings({ locale, preview: isPreview }),
   ])
   const gaId = settings?.googleAnalyticsID || null
 
@@ -52,25 +56,14 @@ export default async function LocaleLayout({
   const htmlLang = locale === 'fr' ? 'fr' : 'en'
   const baseUrl = process.env.SITE_URL || 'https://demo.agilitycms.com'
   const siteName = header?.siteName || 'Galaxy Tech'
-  const organizationLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: siteName,
-    url: baseUrl,
-    ...(header?.logo?.url ? { logo: header.logo.url } : {}),
-  }
-  const webSiteLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: siteName,
-    url: baseUrl,
-    inLanguage: htmlLang,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${baseUrl}/search?q={search_term_string}`,
-      'query-input': 'required name=search_term_string',
-    },
-  }
+  // ONE @graph for the site-wide entities, each with a stable @id. Pages and
+  // components reference these by @id rather than inlining their own copies,
+  // so a crawler resolves the whole site into a single entity graph.
+  // See lib/seo/schema.ts.
+  const siteGraph = graph(
+    organization({ baseUrl, name: siteName, logoUrl: header?.logo?.url }),
+    webSite({ baseUrl, name: siteName, inLanguage: htmlLang }),
+  )
 
   return (
     <>
@@ -82,11 +75,7 @@ export default async function LocaleLayout({
       {/* Site-wide structured data for search engines and answer engines. */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(siteGraph) }}
       />
 
       {/* The Navbar (with the language switcher) is rendered by the page so it

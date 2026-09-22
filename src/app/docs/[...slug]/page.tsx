@@ -7,12 +7,11 @@ import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { CodeBlock } from '../CodeBlock'
 
-// Docs content ships with the repo and only changes on deploy, so render every
-// page fully static at build time. dynamicParams=false prevents runtime
-// re-renders in the serverless function, which previously replaced good
-// prerendered folder pages (e.g. /docs/admin) with cached 404s in production.
-export const dynamic = 'force-static'
-export const dynamicParams = false
+// Docs content ships with the repo and only changes on deploy. The `dynamic`
+// and `dynamicParams` route segment configs are rejected under
+// `cacheComponents`, so they are gone: generateStaticParams below still
+// prerenders every page at build time, and an unknown slug falls through to
+// notFound().
 
 export async function generateStaticParams() {
 	const files = await getAllDocFiles()
@@ -242,23 +241,23 @@ export default async function DocsPage({ params }: { params: Promise<{ slug: str
 							// Resolve relative to current page's slug
 							const resolveRelativeLink = (relativeHref: string, currentSlug: string[]): string => {
 								// Get the directory of the current file (remove filename/README)
-								let baseDir = [...currentSlug]
+								const baseDir = [...currentSlug]
 								if (baseDir.length > 0) {
 									// Remove the last segment (filename or README) to get the directory
 									baseDir.pop()
 								}
 
 								// Remove .md or .mdx extension if present
-								let cleanHref = relativeHref.replace(/\.mdx?$/, '')
+								const cleanHref = relativeHref.replace(/\.mdx?$/, '')
 
 								// Check if this is a README link
 								const isReadmeLink = cleanHref.endsWith('/README') || cleanHref === 'README' || cleanHref.endsWith('./README') || cleanHref === './README'
 
 								// Split the relative path into segments
-								let segments = cleanHref.split('/').filter(s => s !== '' && s !== '.')
+								const segments = cleanHref.split('/').filter(s => s !== '' && s !== '.')
 
 								// Start with the base directory
-								let resolvedSlug = [...baseDir]
+								const resolvedSlug = [...baseDir]
 
 								// Process each segment
 								for (const segment of segments) {

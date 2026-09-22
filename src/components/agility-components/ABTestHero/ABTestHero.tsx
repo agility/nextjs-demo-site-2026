@@ -50,11 +50,12 @@ interface IHero {
  * @param {UnloadedModuleProps} props - The properties passed to the component.
  * @returns {JSX.Element} The rendered hero section with A/B testing.
  */
-export const ABTestHero = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const ABTestHero = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: { experimentKey, heading, description, callToAction, image, imagePosition = "right", variants },
 		contentID,
 	} = await getContentItem<IHero>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
@@ -64,6 +65,7 @@ export const ABTestHero = async ({ module, languageCode }: UnloadedModuleProps) 
 	if (variants?.referencename) {
 		try {
 			const contentListResponse = await getContentList<IHeroVariant>({
+				preview: isPreview,
 				referenceName: variants.referencename,
 				languageCode,
 			})

@@ -10,7 +10,7 @@ import type { UnloadedModuleProps } from '@agility/nextjs'
 const postsPerPage = 5
 
 
-export const PostListing = async ({ globalData, languageCode }: UnloadedModuleProps) => {
+export const PostListing = async ({ globalData, languageCode, isPreview }: UnloadedModuleProps) => {
 
 	// Get page from globalData, default to 1
 	const pageParam = globalData?.searchParams?.page
@@ -31,7 +31,7 @@ export const PostListing = async ({ globalData, languageCode }: UnloadedModulePr
 	const { sitemap, locale } = await getAgilityContext(languageCode)
 
 	const postsResult = await getPostListing({
-		locale, sitemap, skip: (page - 1) * postsPerPage, take: postsPerPage
+		locale, sitemap, skip: (page - 1) * postsPerPage, take: postsPerPage, preview: isPreview
 	})
 
 

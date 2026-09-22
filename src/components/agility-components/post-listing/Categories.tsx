@@ -8,7 +8,7 @@ interface CategoriesProps {
 }
 
 export async function Categories({ selected }: CategoriesProps) {
-	let categories: any[] = []
+	const categories: any[] = []
 
 	if (categories.length === 0) {
 		return

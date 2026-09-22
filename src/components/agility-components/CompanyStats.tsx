@@ -68,7 +68,7 @@ const AnimatedStatValue = ({ value }: { value: string }) => {
 	)
 }
 
-export const CompanyStats = async ({ module, languageCode }: UnloadedModuleProps) => {
+export const CompanyStats = async ({ module, languageCode, isPreview }: UnloadedModuleProps) => {
 	const {
 		fields: {
 			sectionTitle,
@@ -79,12 +79,14 @@ export const CompanyStats = async ({ module, languageCode }: UnloadedModuleProps
 		},
 		contentID,
 	} = await getContentItem<ICompanyStats>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})
 
 	// Fetch the stats from the content list
-	let statsData = await getContentList<IStat>({
+	const statsData = await getContentList<IStat>({
+		preview: isPreview,
 		referenceName: statsReferenceName,
 		languageCode,
 		take: 20, // adjust as needed

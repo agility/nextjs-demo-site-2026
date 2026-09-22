@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
 	const revalidateSitemapTags = (locale?: string) => {
 		const sitemapTagFlat = `agility-sitemap-flat-${locale}`
 		const sitemapTagNested = `agility-sitemap-nested-${locale}`
-		revalidateTag(sitemapTagFlat)
-		revalidateTag(sitemapTagNested)
+		revalidateTag(sitemapTagFlat, "max")
+		revalidateTag(sitemapTagNested, "max")
 		console.info("Revalidating sitemap tags:", sitemapTagFlat, sitemapTagNested)
 	}
 
@@ -81,8 +81,8 @@ export async function POST(req: NextRequest) {
 			//content item change
 			const itemTag = `agility-content-${data.referenceName.toLowerCase()}-${data.languageCode}`
 			const listTag = `agility-content-${data.contentID}-${data.languageCode}`
-			revalidateTag(itemTag)
-			revalidateTag(listTag)
+			revalidateTag(itemTag, "max")
+			revalidateTag(listTag, "max")
 
 			console.info("Revalidating content tags:", itemTag, listTag)
 
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
 		} else if (data.pageID !== undefined && data.pageID > 0) {
 			//page change or removal
 			const pageTag = `agility-page-${data.pageID}-${data.languageCode}`
-			revalidateTag(pageTag)
+			revalidateTag(pageTag, "max")
 
 			//a page being added, changed, or removed always affects the sitemap
 			revalidateSitemapTags(data.languageCode)

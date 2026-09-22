@@ -58,21 +58,26 @@ src/
 │   ├── hooks/                    # React hooks
 │   │   └── useAudienceRegionParams.ts # Personalization hook
 │   └── env.ts                    # Environment variables
-├── middleware.ts                  # Next.js middleware
+├── proxy.ts                              # Next 16 proxy (was middleware.ts)
 └── styles/                       # Global styles
     └── tailwind.css              # Tailwind CSS
 ```
 
 ## Key Files
 
-### Middleware (`src/middleware.ts`)
+### Proxy (`src/proxy.ts`)
 
 Handles:
-- Preview mode detection
+- Preview mode detection (alongside `beforeFiles` rewrites in `next.config.mjs`, which
+  cover cached requests the proxy never sees)
 - Redirect management
 - Locale routing
 - Search params encoding
 - Dynamic content redirects
+- Clean markdown rewrites (`/{path}.md` → `/api/page-md/...`)
+- **Real 404s** — validated against the published sitemap, because under Cache
+  Components `notFound()` can only produce a soft 404
+- **Edge cache headers** — draft-aware, so unpublished content never reaches a shared cache
 
 ### Component Registration (`src/components/agility-components/index.ts`)
 

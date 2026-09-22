@@ -1,4 +1,4 @@
-import { type UnloadedModuleProps } from "@agility/nextjs"
+import type { UnloadedModuleProps } from "@agility/nextjs"
 
 
 import { getContentItem } from "@/lib/cms/getContentItem"
@@ -6,6 +6,7 @@ import OutputContentItem from "./output-content-item/OutputContentItem"
 
 const NoComponentFound = async ({ module, languageCode, isDevelopmentMode, isPreview }: UnloadedModuleProps) => {
 	const contentItem = await getContentItem<any>({
+		preview: isPreview,
 		contentID: module.contentid,
 		languageCode,
 	})

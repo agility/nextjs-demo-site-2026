@@ -55,7 +55,7 @@ export const getRedirections = async ({ forceUpdate = false }: Props): Promise<R
 	try {
 
 		const key = 'redirections'
-		let filepath = 'data/redirections.json'
+		const filepath = 'data/redirections.json'
 
 		let redirectionRes: RedirectionsMap | undefined
 		let fileExists = false
@@ -65,7 +65,7 @@ export const getRedirections = async ({ forceUpdate = false }: Props): Promise<R
 		} catch (e) { }
 
 		if (fileExists) {
-			let redirectionStr = await fs.readFile(filepath, 'utf8')
+			const redirectionStr = await fs.readFile(filepath, 'utf8')
 			redirectionRes = JSON.parse(redirectionStr) as RedirectionsMap
 		}
 
@@ -74,7 +74,7 @@ export const getRedirections = async ({ forceUpdate = false }: Props): Promise<R
 			return redirectionRes
 		}
 
-		let lastAccessDate: Date | null | undefined = undefined
+		const lastAccessDate: Date | null | undefined = undefined
 
 		const redirectionsFromServer = await agilitySDK.getUrlRedirections({ lastAccessDate }) as Redirections
 

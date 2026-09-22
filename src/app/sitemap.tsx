@@ -2,6 +2,23 @@ import { getSitemapFlat } from "@/lib/cms/getSitemapFlat";
 import { getAllDocFiles } from "@/lib/docs/getDocsFiles";
 import { locales, defaultLocale } from "@/lib/i18n/config";
 import type { MetadataRoute } from "next";
+import fs from "node:fs";
+
+/**
+ * Real modification time of a docs markdown file.
+ *
+ * Docs ship with the repo, so the file mtime is an honest `<lastmod>` — and,
+ * unlike `new Date()`, it is a stable value that `cacheComponents` is happy to
+ * prerender. Returns undefined if the file cannot be stat'd, which just omits
+ * the date for that entry.
+ */
+const fileModified = (filePath: string): Date | undefined => {
+	try {
+		return fs.statSync(filePath).mtime
+	} catch {
+		return undefined
+	}
+}
 
 /**
  * Demo Site Sitemap
@@ -49,7 +66,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 					return {
 						url: isHome ? baseUrl : `${baseUrl}${localizedPath}`,
-						lastModified: new Date(),
+						// No lastModified. It used to be `new Date()`, which claimed every
+						// page changed on every build — search engines learn to ignore a
+						// lastmod that always says "now", so it was worse than useless. It
+						// is also an unstable value, which `cacheComponents` refuses to
+						// prerender. Real per-page dates need each node's `modified` field
+						// from the CMS; until that exists, omitting beats lying.
 						changeFrequency: "daily" as const,
 						priority: isHome ? 1 : 0.8,
 					};
@@ -83,7 +105,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 			if (folderPath && !addedPaths.has(folderPath)) {
 				docsEntries.push({
 					url: `${baseUrl}/docs/${folderPath}`,
-					lastModified: new Date(),
+					lastModified: fileModified(file.filePath),
 					changeFrequency: "weekly" as const,
 					priority: 0.8
 				});
@@ -95,7 +117,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 			if (filePath && !addedPaths.has(filePath)) {
 				docsEntries.push({
 					url: `${baseUrl}/docs/${filePath}`,
-					lastModified: new Date(),
+					lastModified: fileModified(file.filePath),
 					changeFrequency: "weekly" as const,
 					priority: 0.8
 				});
@@ -107,7 +129,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	// Add docs index page
 	docsEntries.unshift({
 		url: `${baseUrl}/docs`,
-		lastModified: new Date(),
+		// newest doc wins for the index page
+		lastModified: docFiles.reduce<Date | undefined>((newest, f) => {
+			const m = fileModified(f.filePath)
+			return !newest || (m && m > newest) ? m : newest
+		}, undefined),
 		changeFrequency: "weekly" as const,
 		priority: 0.9
 	});

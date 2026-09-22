@@ -1,4 +1,4 @@
-import { type ContentItem } from "@agility/nextjs"
+import type { ContentItem } from "@agility/nextjs"
 import { getContentList } from "@/lib/cms/getContentList"
 
 interface IAISearchConfig {
@@ -27,6 +27,8 @@ export interface IAISearchConfigData {
 
 interface Props {
 	locale: string
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -57,7 +59,7 @@ const parseTemperature = (temperatureValue: string | undefined | null): number =
  * @param {Props} { locale }
  * @return {IAISearchConfigData}
  */
-export const getAISearchConfig = async ({ locale }: Props): Promise<IAISearchConfigData> => {
+export const getAISearchConfig = async ({ locale, preview = false }: Props): Promise<IAISearchConfigData> => {
 
 	// Default configuration values
 	const defaultConfig: IAISearchConfigData = {
@@ -91,7 +93,8 @@ Keep responses informative and helpful. Use the search tool results to provide a
 
 	try {
 		// try to fetch our AI search configuration (reference name is case-sensitive)
-		let aiConfig = await getContentList<IAISearchConfig>({
+		const aiConfig = await getContentList<IAISearchConfig>({
+			preview,
 			referenceName: "aisearchconfiguration",
 			languageCode: locale,
 			take: 1,

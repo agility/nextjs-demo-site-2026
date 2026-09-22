@@ -18,7 +18,7 @@ import { DarkModeToggle } from './dark-mode-toggle'
 import { LanguageSwitcher } from './language-switcher'
 import { useState } from 'react'
 import { localizeUrl, localizeUrlField } from '@/lib/i18n/localizeUrl'
-import { type Locale } from '@/lib/i18n/config'
+import type { Locale } from '@/lib/i18n/config'
 
 const links = [
   { href: '/pricing', label: 'Pricing' },

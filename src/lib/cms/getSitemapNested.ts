@@ -1,24 +1,39 @@
+import "server-only";
+
+import { cacheLife, cacheTag } from "next/cache"
+import { connection } from "next/server"
+import type { SitemapNestedRequestParams } from "@agility/content-fetch/dist/methods/getSitemapNested"
 import getAgilitySDK from "@/lib/cms/getAgilitySDK"
 
-import { type SitemapNestedRequestParams } from "@agility/content-fetch/dist/methods/getSitemapNested"
+export type GetSitemapNestedParams = SitemapNestedRequestParams & {
+	/** Read staging content instead of published. Preview reads are NEVER cached. */
+	preview?: boolean
+}
 
 /**
- * Get the nested sitemap for the given language code, with caching information added.
- * @param params
- * @returns
+ * Get the nested sitemap (menu tree) for a locale.
+ *
+ * Published reads are cached and invalidated by /api/revalidate. The tag format
+ * is a CONTRACT with that webhook.
  */
-export const getSitemapNested = async (params: SitemapNestedRequestParams) => {
+export const getSitemapNested = async ({ preview = false, ...params }: GetSitemapNestedParams) => {
 
-
-	const agilitySDK = await getAgilitySDK()
-
-	agilitySDK.config.fetchConfig = {
-		next: {
-			tags: [`agility-sitemap-nested-${params.languageCode || params.locale}`],
-			revalidate: 60,
-		},
+	if (preview) {
+		await connection()
+		return fetchSitemapNested(params, true)
 	}
 
-	return await agilitySDK.getSitemapNested(params)
+	return cachedSitemapNested(params)
+}
 
+const cachedSitemapNested = async (params: SitemapNestedRequestParams) => {
+	"use cache"
+	cacheTag(`agility-sitemap-nested-${params.languageCode || params.locale}`)
+	cacheLife("days")
+	return fetchSitemapNested(params, false)
+}
+
+const fetchSitemapNested = async (params: SitemapNestedRequestParams, preview: boolean) => {
+	const agilitySDK = getAgilitySDK(preview)
+	return await agilitySDK.getSitemapNested(params)
 }

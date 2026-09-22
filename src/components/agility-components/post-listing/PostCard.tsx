@@ -1,10 +1,10 @@
 'use client'
 
 import { Link } from '@/components/link'
-import { type IPostMin } from '@/lib/cms-content/getPostListing'
+import type { IPostMin } from '@/lib/cms-content/getPostListing'
 import { AgilityPic } from '@agility/nextjs'
 import { createPostImageTransitionName } from '@/lib/hooks/useViewTransition'
-import { unstable_ViewTransition as ViewTransition } from 'react'
+import { ViewTransition } from 'react'
 
 interface PostCardProps {
 	post: IPostMin

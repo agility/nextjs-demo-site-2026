@@ -1,9 +1,9 @@
 import { DateTime } from "luxon"
-import { type ContentList } from "@agility/content-fetch"
-import { type ImageField } from "@agility/nextjs"
+import type { ContentList } from "@agility/content-fetch"
+import type { ImageField } from "@agility/nextjs"
 import { getContentList } from "@/lib/cms/getContentList"
 import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
-import { type IPost } from "../types/IPost"
+import type { IPost } from "../types/IPost"
 import { defaultLocale, locales } from "@/lib/i18n/config"
 import { decodeHtmlEntities } from "@/lib/utils"
 
@@ -25,6 +25,8 @@ interface LoadPostsProp {
 	locale: string
 	skip: number
 	take: number
+	/** Read staging content instead of published. */
+	preview?: boolean
 }
 
 /**
@@ -32,7 +34,7 @@ interface LoadPostsProp {
  * @param param0
  * @returns
  */
-export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsProp) => {
+export const getPostListing = async ({ sitemap, locale, skip, take, preview = false }: LoadPostsProp) => {
 
 
 	try {
@@ -40,13 +42,15 @@ export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsP
 
 
 		// get sitemap...
-		let sitemapNodes = await getSitemapFlat({
+		const sitemapNodes = await getSitemapFlat({
+			preview,
 			channelName: sitemap,
 			languageCode: locale,
 		})
 
 		// get posts...
-		let rawPosts: ContentList = await getContentList<IPost>({
+		const rawPosts: ContentList = await getContentList<IPost>({
+			preview,
 			referenceName: "posts",
 			languageCode: locale,
 			contentLinkDepth: 2,
@@ -115,7 +119,7 @@ export const getPostListing = async ({ sitemap, locale, skip, take }: LoadPostsP
 }
 
 const resolvePostUrls = function (sitemap: any, posts: any) {
-	let dynamicUrls: any = {};
+	const dynamicUrls: any = {};
 	posts.forEach((post: any) => {
 		Object.keys(sitemap).forEach((path) => {
 			if (sitemap[path].contentID === post.contentID) {
