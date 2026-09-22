@@ -6,6 +6,10 @@
 
 sitemap: https://demo.agilitycms.com/sitemap.xml
 
+# Machine-readable index for AI agents (llmstxt.org), generated from the CMS sitemap.
+# Every page is also available as clean markdown by appending .md to its URL.
+# llms: https://demo.agilitycms.com/llms.txt
+
 User-agent: *
 Allow: /
 

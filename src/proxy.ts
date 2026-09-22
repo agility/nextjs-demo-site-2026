@@ -115,6 +115,23 @@ export async function proxy(request: NextRequest) {
 		const dynredirectUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}/api/dynamic-redirect?ContentID=${contentID}&slug=${encodeURIComponent(request.nextUrl.pathname)}`
 		return NextResponse.rewrite(dynredirectUrl)
 
+	} else if (ext === "md") {
+
+		/*****************************************
+		 * CLEAN MARKDOWN FOR AI AGENTS (.md)    *
+		 *****************************************/
+
+		// GET /{any-page-path}.md -> /api/page-md/{any-page-path}
+		//
+		// The path travels in the URL PATH, not a query param: query strings added
+		// during a rewrite do not survive reliably. Indexed from /llms.txt.
+		//
+		// This has to sit BEFORE the `!ext` branch below, because ".md" is an
+		// extension and that branch only handles extension-less paths.
+		const mdPath = request.nextUrl.pathname.replace(/\.md$/, "")
+		const mdUrl = new URL(`/api/page-md${mdPath}`, request.nextUrl.origin)
+		return NextResponse.rewrite(mdUrl)
+
 	} else if ((!ext || ext.length === 0)) {
 
 		/**********************
