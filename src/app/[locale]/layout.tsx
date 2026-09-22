@@ -16,6 +16,7 @@ import { getSettings } from '@/lib/cms-content/getSettings'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { AnalyticsProvider } from '@/components/analytics'
 import Script from 'next/script'
+import { graph, organization, webSite } from '@/lib/seo/schema'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -55,25 +56,14 @@ export default async function LocaleLayout({
   const htmlLang = locale === 'fr' ? 'fr' : 'en'
   const baseUrl = process.env.SITE_URL || 'https://demo.agilitycms.com'
   const siteName = header?.siteName || 'Galaxy Tech'
-  const organizationLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: siteName,
-    url: baseUrl,
-    ...(header?.logo?.url ? { logo: header.logo.url } : {}),
-  }
-  const webSiteLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: siteName,
-    url: baseUrl,
-    inLanguage: htmlLang,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${baseUrl}/search?q={search_term_string}`,
-      'query-input': 'required name=search_term_string',
-    },
-  }
+  // ONE @graph for the site-wide entities, each with a stable @id. Pages and
+  // components reference these by @id rather than inlining their own copies,
+  // so a crawler resolves the whole site into a single entity graph.
+  // See lib/seo/schema.ts.
+  const siteGraph = graph(
+    organization({ baseUrl, name: siteName, logoUrl: header?.logo?.url }),
+    webSite({ baseUrl, name: siteName, inLanguage: htmlLang }),
+  )
 
   return (
     <>
@@ -85,11 +75,7 @@ export default async function LocaleLayout({
       {/* Site-wide structured data for search engines and answer engines. */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(siteGraph) }}
       />
 
       {/* The Navbar (with the language switcher) is rendered by the page so it

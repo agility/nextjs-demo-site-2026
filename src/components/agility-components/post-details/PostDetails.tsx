@@ -11,6 +11,7 @@ import { Button } from "../../button"
 import { PostImage } from "./PostImage"
 import { localizeUrl } from "@/lib/i18n/localizeUrl"
 import { decodeHtmlEntities } from "@/lib/utils"
+import { organizationId, webSiteId, webPageId, ref } from "@/lib/seo/schema"
 
 const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProps) => {
 	if (!dynamicPageItem) {
@@ -70,9 +71,14 @@ const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProp
 	if (post.slug) {
 		blogPostingStructuredData.mainEntityOfPage = {
 			"@type": "WebPage",
-			"@id": `${baseUrl}/blog/${post.slug}`,
+			"@id": webPageId(`${baseUrl}/blog/${post.slug}`),
 		}
 	}
+	//Point at the Organization the layout defines rather than inlining another
+	//copy of it. Without the @id reference a consumer has no way to tell that
+	//this article's publisher is the same entity as the site's owner.
+	blogPostingStructuredData.publisher = ref(organizationId(baseUrl))
+	blogPostingStructuredData.isPartOf = ref(webSiteId(baseUrl))
 
 	return (
 		<Container data-agility-component={contentID}>
