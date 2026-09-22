@@ -8,6 +8,17 @@ import { analytics } from '@/lib/analytics'
 import { AnalyticsEvents } from '@/lib/analytics/events'
 
 /**
+ * The audience name as it travels in the URL: lower case, alphanumeric plus
+ * dashes/underscores. The server matches on the same shape (see
+ * getAudienceContentID in lib/utils/audienceRegionUtils), so reading and
+ * writing the param MUST go through this - comparing against the raw CMS name
+ * silently fails for anything with a space or a slash ("Financial Services",
+ * "E-commerce / Retail") and the picker then shows "All Audiences" even though
+ * the page is personalized.
+ */
+export const toAudienceParam = (name: string) => name.toLowerCase().replace(/[^a-zA-Z0-9-_]/g, '')
+
+/**
  * Custom hook for managing audience and region query parameters
  * This allows any component to read and update the current audience/region selection
  */
@@ -21,7 +32,7 @@ export function useAudienceRegionParams(audiences: IAudience[] = [], regions: IR
   const selectedRegionName = searchParams.get('region')
 
   const selectedAudience = selectedAudienceName
-    ? audiences.find(a => a.name === selectedAudienceName) || null
+    ? audiences.find(a => toAudienceParam(a.name) === selectedAudienceName) || null
     : null
 
   const selectedRegion = selectedRegionName
@@ -34,8 +45,7 @@ export function useAudienceRegionParams(audiences: IAudience[] = [], regions: IR
 
     if (audienceName) {
       //set the audience to a value that is ONLY alphanumeric and dashes/underscores (no spaces or special characters)
-      audienceName = audienceName.toLowerCase().replace(/[^a-zA-Z0-9-_]/g, '')
-      params.set('audience', audienceName)
+      params.set('audience', toAudienceParam(audienceName))
     } else {
       params.delete('audience')
     }

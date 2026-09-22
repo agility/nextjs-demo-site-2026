@@ -33,10 +33,16 @@ export const getAgilityPage = async ({ params }: PageProps): Promise<AgilityPage
 	const awaitedParams = await params
 	const { isPreview: preview, locale, sitemap, isDevelopmentMode } = await getAgilityContext(awaitedParams.locale)
 
-	if (!awaitedParams.slug) awaitedParams.slug = [""]
+	//NOTE: work on a COPY of the slug. The object returned by `await params` is
+	//built from getters in a production build, so assigning to it throws
+	//"Cannot set property slug of #<Object> which has only a getter" - which
+	//took down every URL carrying a query string (?audience=, ?region=, ?q=),
+	//since only those routes reach the ~~~ branch below. `next dev` hands back a
+	//writable object, so this only ever failed once deployed.
+	let slugParts = awaitedParams.slug ? [...awaitedParams.slug] : [""]
 
 	//check the last element of the slug to see if it has search params encoded (from the proxy)
-	let lastSlug = awaitedParams.slug[awaitedParams.slug.length - 1]
+	let lastSlug = slugParts[slugParts.length - 1]
 	const searchParams: { [key: string]: string } = {}
 	if (lastSlug && lastSlug.startsWith("~~~") && lastSlug.endsWith("~~~")) {
 		//we have search params encoded here
@@ -51,11 +57,11 @@ export const getAgilityPage = async ({ params }: PageProps): Promise<AgilityPage
 			}
 		})
 
-		awaitedParams.slug = awaitedParams.slug.slice(0, awaitedParams.slug.length - 1)
-		if (awaitedParams.slug.length === 0) awaitedParams.slug = [""]
+		slugParts = slugParts.slice(0, slugParts.length - 1)
+		if (slugParts.length === 0) slugParts = [""]
 	}
 
-	const path = "/" + awaitedParams.slug.filter(s => s.length > 0).join("/")
+	const path = "/" + slugParts.filter(s => s.length > 0).join("/")
 
 	const base = {
 		languageCode: locale,
