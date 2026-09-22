@@ -1,7 +1,70 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { checkRedirect } from './lib/cms-content/checkRedirect'
+import { isPublishedPath } from './lib/cms/publishedPaths'
 import { defaultLocale, locales, isValidLocale, getLocaleFromPathname, removeLocaleFromPathname } from './lib/i18n/config'
+
+/** Next sets this cookie when draft mode is on. */
+const DRAFT_COOKIE = "__prerender_bypass"
+
+/**
+ * Vendor-neutral edge cache headers (RFC 9213), honoured by both Vercel and
+ * Netlify. These live HERE rather than in next.config's `headers()` because
+ * that rule is unconditional: it would put `public` caching on draft-mode
+ * renders too, publishing an editor's unpublished content to a shared CDN.
+ *
+ * The TTL is only a self-healing backstop — /api/revalidate is the real
+ * invalidation path, so a publish goes live immediately regardless.
+ */
+const CDN_CACHE = "public, s-maxage=60, stale-while-revalidate=86400"
+
+const applyCacheHeaders = (res: NextResponse, request: NextRequest) => {
+	if (request.cookies.has(DRAFT_COOKIE)) {
+		//a draft render shows unpublished content — it must never reach a shared cache
+		res.headers.set("Cache-Control", "private, no-store")
+		return res
+	}
+	res.headers.set("CDN-Cache-Control", CDN_CACHE)
+	return res
+}
+
+/**
+ * A real 404, answered by the proxy itself.
+ *
+ * Under `cacheComponents` every page route is partially prerendered, so the
+ * static shell — and with it a `200` status line — can already be on the wire
+ * before the page resolves the sitemap and calls notFound(). Next's own docs
+ * are explicit that not-found returns "200 for streamed responses" and that the
+ * status "cannot be updated" once headers are sent. A rewrite cannot fix it
+ * either: the destination's status is not adopted.
+ *
+ * So the check happens here, before anything renders. The body is the app's own
+ * prerendered 404 page, fetched once per server instance and memoised.
+ */
+let notFoundBody: string | null = null
+
+const FALLBACK_404 = "<!doctype html><title>404 — Not Found</title><h1>404 — Not Found</h1>"
+
+const notFoundResponse = async (request: NextRequest) => {
+	if (notFoundBody === null) {
+		try {
+			//A header the proxy can see on the way back in. /_not-found is also
+			//listed in APP_PATHS, but this is a hard stop: without it, a mistake
+			//in that list turns into an infinite fetch loop that hangs the
+			//request rather than failing visibly.
+			const res = await fetch(new URL("/_not-found", request.nextUrl.origin), {
+				headers: { "x-proxy-404-body": "1" },
+			})
+			notFoundBody = await res.text()
+		} catch {
+			notFoundBody = FALLBACK_404
+		}
+	}
+	return new NextResponse(notFoundBody, {
+		status: 404,
+		headers: { "Content-Type": "text/html; charset=utf-8" },
+	})
+}
 
 // This function can be marked `async` if using `await` inside
 export async function proxy(request: NextRequest) {
@@ -117,6 +180,21 @@ export async function proxy(request: NextRequest) {
 				return NextResponse.redirect(redirectUrl)
 			}
 		}
+		/*********************************
+		 * VALIDATE THE PATH (real 404s) *
+		 *********************************/
+
+		// Skipped in dev and in draft mode: an editor previewing an unpublished
+		// page is exactly the case where the path is legitimately absent from the
+		// PUBLISHED sitemap. Fails open if the CMS is unreachable.
+		const isDraft = request.cookies.has(DRAFT_COOKIE)
+		const isFetchingOwn404Body = request.headers.has("x-proxy-404-body")
+		if (process.env.NODE_ENV !== "development" && !isDraft && !isFetchingOwn404Body) {
+			if (!(await isPublishedPath(request.nextUrl.pathname))) {
+				return await notFoundResponse(request)
+			}
+		}
+
 		/************************
 		 * HANDLE SEARCH PARAMS *
 		 ************************/
@@ -158,7 +236,7 @@ export async function proxy(request: NextRequest) {
 
 		// Skip locale routing for docs routes, sitemap, and robots.txt
 		if (isDocsRoute || isSitemapOrRobots) {
-			return NextResponse.next()
+			return applyCacheHeaders(NextResponse.next(), request)
 		}
 
 		const baseUrl = request.nextUrl.origin
@@ -169,17 +247,17 @@ export async function proxy(request: NextRequest) {
 
 			// For all paths (including root), rewrite to include default locale (no redirect)
 			// This keeps the clean URL but internally routes to the locale-specific page
-			return NextResponse.rewrite(localeBasedUrl)
+			return applyCacheHeaders(NextResponse.rewrite(localeBasedUrl), request)
 		}
 
 		if (hasSearchParams) {
 			//if we have search params, we need to make sure we decode them before passing them on
 			const searchParamUrl = new URL(pathname, baseUrl)
-			return NextResponse.rewrite(searchParamUrl)
+			return applyCacheHeaders(NextResponse.rewrite(searchParamUrl), request)
 		}
 
 		// If we reach here, let Next.js handle the request normally
-		return NextResponse.next()
+		return applyCacheHeaders(NextResponse.next(), request)
 
 	}
 

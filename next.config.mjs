@@ -117,7 +117,22 @@ const nextConfig = {
 		}
 	},
 	async headers() {
+		// NOTE: CACHE headers are deliberately NOT here — they live in src/proxy.ts,
+		// which can see the draft-mode cookie. A rule in this file is unconditional
+		// and would put `public` CDN caching on draft renders, publishing an
+		// editor's unpublished content to a shared cache. These are security and
+		// static-asset headers only, which are safe to apply unconditionally.
 		return [
+			{
+				// Files under public/ (logos, fonts, favicons) otherwise ship
+				// `max-age=0, must-revalidate` — Next only long-caches /_next/static,
+				// whose filenames are content-hashed. Without this every repeat visit
+				// re-requests the brand assets. The trade-off `immutable` accepts:
+				// replacing a file at the SAME name won't be picked up by browsers
+				// that already have it, so version the filename when swapping an asset.
+				source: "/:path*.:ext(svg|jpg|jpeg|png|webp|avif|gif|ico|woff|woff2)",
+				headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
+			},
 			{
 				source: "/(.*)",
 				headers: [
