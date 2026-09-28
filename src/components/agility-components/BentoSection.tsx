@@ -1,9 +1,6 @@
 import { getContentItem } from "@/lib/cms/getContentItem";
 import type { ContentItem, ImageField, UnloadedModuleProps } from "@agility/nextjs";
 import { Container } from "../container";
-import { Keyboard } from "../keyboard";
-import { LogoCluster } from "../logo-cluster";
-import { Map } from "../map";
 import { Subheading, Heading } from "../text";
 import { getContentList } from "@/lib/cms/getContentList";
 import { AnimatedBentoCard } from "../animated-bento-card";

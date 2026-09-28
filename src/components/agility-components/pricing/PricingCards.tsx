@@ -1,9 +1,7 @@
 import { Button } from '@/components/button'
 import { Container } from '@/components/container'
 import { Gradient } from '@/components/gradient'
-import { LogoCloud } from '@/components/logo-cloud'
 import { Subheading } from '@/components/text'
-import { CheckIcon, MinusIcon } from '@heroicons/react/16/solid'
 import type { UnloadedModuleProps, URLField, ContentItem } from "@agility/nextjs"
 import { getContentItem } from "@/lib/cms/getContentItem"
 import { getContentList } from "@/lib/cms/getContentList"
@@ -164,7 +162,7 @@ function PricingCard({ tier }: { tier: TransformedTier }) {
 					</div>
 					<div className="mt-8">
 						<h3 className="text-sm/6 font-medium text-gray-950 dark:text-white">
-							Start selling with:
+							Includes:
 						</h3>
 						<ul className="mt-3 space-y-3">
 							{tier.highlights.map((highlight: string, featureIndex: number) => (
