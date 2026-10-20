@@ -250,6 +250,24 @@ The Demo Site has **20 component definitions** organized into categories:
 - Metrics displays
 - KPI sections
 
+### Stats Strip
+
+**Purpose**: A centered heading and short description above a single row of headline stats, each shown in its own tile
+
+**Fields:**
+- Heading (required)
+- Description (optional)
+
+**Linked Content:**
+- Nested list of Stat content items (Value, e.g. "8,000+", and Name, e.g. "Creators on the platform")
+
+**Use Cases:**
+- "Trusted by" / social proof sections
+- Headline metrics on the home or about page
+
+**Tips:**
+- Four stats fill one row on desktop; values that start with a number animate as a count-up
+
 ### Pricing Cards
 
 **Purpose**: Pricing information cards

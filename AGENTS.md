@@ -461,6 +461,7 @@ With width alone the CDN scales proportionally, so any cropping is left to CSS `
 - **TeamListing** - Team member display
 - **BlogHeader** - Blog-specific header
 - **CompanyStats** - Statistics display component
+- **StatsStrip** - Centered heading with a single row of stat tiles
 - **Testimonials** - Customer testimonial components
 - **Pricing** - Pricing table components
 - **Carousel** - Image/content carousel

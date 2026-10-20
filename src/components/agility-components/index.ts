@@ -1,6 +1,7 @@
 import { BackgroundHero } from "./BackgroundHero";
 import { BentoSection } from "./BentoSection";
 import { CompanyStats } from "./company-stats";
+import { StatsStrip } from "./stats-strip";
 import { Header } from "./Header";
 import { Hero } from "./Hero";
 import { LogoStrip } from "./logo-strip/LogoStrip";
@@ -30,6 +31,7 @@ const allModules = [
 	{ name: "BackgroundHero", module: BackgroundHero },
 	{ name: "BentoSection", module: BentoSection },
 	{ name: "CompanyStats", module: CompanyStats },
+	{ name: "StatsStrip", module: StatsStrip },
 	{ name: "Header", module: Header },
 	{ name: "Hero", module: Hero },
 	{ name: "ABTestHero", module: ABTestHero },

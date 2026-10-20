@@ -19,7 +19,7 @@ The Demo Site includes **20 registered components** organized by category:
 - BentoSection, LogoStrip, PersonalizedLogoStrip
 
 ### Data Display (3)
-- CompanyStats, PricingCards, PricingTable
+- CompanyStats, StatsStrip, PricingCards, PricingTable
 
 ### Navigation (1)
 - Header
