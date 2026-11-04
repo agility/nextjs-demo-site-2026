@@ -66,8 +66,29 @@ const notFoundResponse = async (request: NextRequest) => {
 	})
 }
 
-// This function can be marked `async` if using `await` inside
+/**
+ * Google and Bing index only /docs on the demo site (Joel, 2026-11-03). Every
+ * other response tells just those two not to index it; Algolia, Azure AI Search
+ * and other crawlers still see the whole site. robots.txt deliberately does NOT
+ * Disallow them: a crawler that cannot fetch a page never sees its noindex, and
+ * Google keeps a blocked URL in its index as a bare link.
+ *
+ * A header rather than only the meta tags in resolveAgilityMetaData, so it also
+ * covers the .md twins, llms.txt and anything else that is not a CMS page.
+ */
+const SEARCH_ENGINE_NOINDEX = ["googlebot: noindex, follow", "bingbot: noindex, follow"]
+
+const isDocsPath = (pathname: string) => pathname === "/docs" || pathname.startsWith("/docs/") || pathname.startsWith("/docs.")
+
 export async function proxy(request: NextRequest) {
+	const res = await route(request)
+	if (!isDocsPath(request.nextUrl.pathname)) {
+		for (const value of SEARCH_ENGINE_NOINDEX) res.headers.append("X-Robots-Tag", value)
+	}
+	return res
+}
+
+async function route(request: NextRequest) {
 
 
 	/*****************************

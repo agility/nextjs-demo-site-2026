@@ -1,7 +1,13 @@
 # Algolia-Crawler-Verif: F3977A0FB53DDD41
 
 # Demo Site Robots Configuration
-# The full site is now indexable by search engines and AI crawlers.
+# Every crawler may crawl the whole site. Algolia, Azure AI Search and the AI
+# crawlers below index all of it; Google and Bing index only /docs.
+#
+# That limit is NOT set here. Pages outside /docs send "noindex" to googlebot and
+# bingbot only (X-Robots-Tag from src/proxy.ts, plus meta tags on CMS pages). A
+# Disallow would hide that noindex from them, and Google keeps a blocked URL in
+# its index as a bare link, so do not add one.
 # The sitemap is generated from Agility CMS pages (via getSitemapFlat()) plus the demo /docs section.
 
 sitemap: https://demo.agilitycms.com/sitemap.xml
