@@ -2,6 +2,8 @@ import { createMcpHandler } from "mcp-handler"
 import { z } from "zod4"
 import { algoliasearch } from "algoliasearch"
 import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
+import { toPublicPath } from "@/lib/cms/homePage"
+import { localizeUrl } from "@/lib/i18n/localizeUrl"
 import { getAgilityPage } from "@/lib/cms/getAgilityPage"
 import { pageToMarkdown } from "@/lib/cms-content/pageToMarkdown"
 import { defaultLocale, locales } from "@/lib/i18n/config"
@@ -31,7 +33,6 @@ import type { SitemapNode } from "@/lib/types/SitemapNode"
 
 const BASE_URL = process.env.SITE_URL || "https://demo.agilitycms.com"
 
-const fullUrl = (path: string) => `${BASE_URL}${path === "/home" ? "/" : path}`
 
 const handler = createMcpHandler(
 	(server) => {
@@ -56,7 +57,8 @@ const handler = createMcpHandler(
 
 				const pages = Object.values(sitemap)
 					.filter((n) => !n.isFolder && !n.redirect && n.visible?.sitemap !== false)
-					.map((n) => `- ${n.title} — ${fullUrl(n.path)}`)
+					//the home node is served at the locale root, not at its own sitemap path
+					.map((n) => `- ${n.title} — ${BASE_URL}${localizeUrl(toPublicPath(n.path, sitemap), lang)}`)
 
 				return {
 					content: [{

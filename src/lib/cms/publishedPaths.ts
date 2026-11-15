@@ -1,5 +1,7 @@
 import agility from "@agility/content-fetch"
 import { defaultLocale, locales, removeLocaleFromPathname, getLocaleFromPathname } from "@/lib/i18n/config"
+import { localizeUrl } from "@/lib/i18n/localizeUrl"
+import { findHomeNode } from "./homePage"
 
 /**
  * Paths this app serves itself. They are NOT in the Agility sitemap, so the
@@ -53,12 +55,14 @@ const TTL_MS = 60_000
 
 interface CacheEntry {
 	paths: Set<string>
+	/** The home node's own sitemap path (e.g. "/home"). It is served at "/". */
+	homePath?: string
 	expires: number
 }
 
 const pathCache = new Map<string, CacheEntry>()
 
-const loadPaths = async (locale: string): Promise<Set<string>> => {
+const loadPaths = async (locale: string): Promise<Omit<CacheEntry, "expires">> => {
 	const client = agility.getApi({
 		guid: process.env.AGILITY_GUID,
 		apiKey: process.env.AGILITY_API_FETCH_KEY,
@@ -70,9 +74,50 @@ const loadPaths = async (locale: string): Promise<Set<string>> => {
 	const sitemap = await client.getSitemapFlat({
 		channelName: process.env.AGILITY_SITEMAP || "website",
 		languageCode: locale,
-	}) as { [path: string]: unknown }
+	}) as { [path: string]: { path: string, isFolder?: boolean, redirect?: unknown } }
 
-	return new Set(Object.keys(sitemap))
+	return { paths: new Set(Object.keys(sitemap)), homePath: findHomeNode(sitemap)?.path }
+}
+
+/** The cached sitemap entry for a locale, refreshed after TTL_MS. Undefined if Agility is unreachable. */
+const getEntry = async (locale: string): Promise<CacheEntry | undefined> => {
+	const now = Date.now()
+	let entry = pathCache.get(locale)
+
+	if (!entry || entry.expires < now) {
+		try {
+			entry = { ...(await loadPaths(locale)), expires: now + TTL_MS }
+			pathCache.set(locale, entry)
+		} catch (error) {
+			console.error("Could not load the sitemap to validate paths — failing open.", error)
+			//keep serving a stale entry if we have one
+		}
+	}
+	return entry
+}
+
+/** Split a request path into its locale and the locale-less sitemap path. */
+const splitLocale = (pathname: string) => {
+	const localePrefix = getLocaleFromPathname(pathname, locales)
+	const locale = localePrefix || defaultLocale
+	const path = localePrefix ? (removeLocaleFromPathname(pathname, localePrefix) || "/") : pathname
+	return { locale, path }
+}
+
+/**
+ * Where to redirect a request for the home node's own sitemap path.
+ *
+ * The home page is served at the locale root (see ./homePage.ts), so `/home`
+ * goes to `/` and `/fr/home` to `/fr`. Returns null for every other path.
+ */
+export const homePageRedirect = async (pathname: string): Promise<string | null> => {
+	const { locale, path } = splitLocale(pathname)
+	if (path === "/") return null
+
+	const entry = await getEntry(locale)
+	if (!entry?.homePath) return null
+
+	return path.replace(/\/$/, "") === entry.homePath ? localizeUrl("/", locale) : null
 }
 
 /**
@@ -88,25 +133,13 @@ export const isPublishedPath = async (pathname: string): Promise<boolean> => {
 	if (isAppPath(pathname)) return true
 
 	//strip the locale prefix — the sitemap stores locale-less paths
-	const localePrefix = getLocaleFromPathname(pathname, locales)
-	const locale = localePrefix || defaultLocale
-	const path = localePrefix ? (removeLocaleFromPathname(pathname, localePrefix) || "/") : pathname
+	const { locale, path } = splitLocale(pathname)
 
 	if (path === "/") return true
 
-	const now = Date.now()
-	let entry = pathCache.get(locale)
-
-	if (!entry || entry.expires < now) {
-		try {
-			entry = { paths: await loadPaths(locale), expires: now + TTL_MS }
-			pathCache.set(locale, entry)
-		} catch (error) {
-			console.error("Could not load the sitemap to validate paths — failing open.", error)
-			//keep serving a stale set if we have one rather than 404ing real pages
-			if (!entry) return true
-		}
-	}
+	//fail open: no entry means Agility could not be reached
+	const entry = await getEntry(locale)
+	if (!entry) return true
 
 	//tolerate a trailing slash
 	return entry.paths.has(path) || entry.paths.has(path.replace(/\/$/, ""))

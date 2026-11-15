@@ -1,6 +1,8 @@
 import { getSitemapFlat } from "@/lib/cms/getSitemapFlat";
 import { getAllDocFiles } from "@/lib/docs/getDocsFiles";
-import { locales, defaultLocale } from "@/lib/i18n/config";
+import { locales } from "@/lib/i18n/config";
+import { localizeUrl } from "@/lib/i18n/localizeUrl";
+import { toPublicPath } from "@/lib/cms/homePage";
 import type { MetadataRoute } from "next";
 import fs from "node:fs";
 
@@ -59,13 +61,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 					return true;
 				})
 				.map((path) => {
-					// For the default locale, don't add a locale prefix to the URL.
-					const localizedPath =
-						locale === defaultLocale ? path : `/${locale}${path}`;
-					const isHome = path === "/";
+					// The home node is served at the root ("/", "/fr"), not at its own
+					// sitemap path. For the default locale, don't add a locale prefix.
+					const publicPath = toPublicPath(path, flatSitemap);
+					const localizedPath = localizeUrl(publicPath, locale);
+					const isHome = publicPath === "/";
 
 					return {
-						url: isHome ? baseUrl : `${baseUrl}${localizedPath}`,
+						url: localizedPath === "/" ? baseUrl : `${baseUrl}${localizedPath}`,
 						// No lastModified. It used to be `new Date()`, which claimed every
 						// page changed on every build — search engines learn to ignore a
 						// lastmod that always says "now", so it was worse than useless. It

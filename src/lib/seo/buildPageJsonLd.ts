@@ -2,6 +2,7 @@ import { buildJsonLd, type GeoSitemapFlat, type JsonLdDocument } from "@agility/
 import type { AgilityPageProps } from "@agility/nextjs"
 import { localizeUrl } from "@/lib/i18n/localizeUrl"
 import { defaultLocale, type Locale } from "@/lib/i18n/config"
+import { toPublicPath } from "@/lib/cms/homePage"
 import { contentModelMappings } from "./contentModelMappings"
 
 interface BuildPageJsonLdInput {
@@ -31,15 +32,18 @@ export function buildPageJsonLd({ agilityData, sitemap, locale, siteName, logoUr
 
 	const siteUrl = process.env.SITE_URL || "https://demo.agilitycms.com"
 	// Public URLs carry a locale prefix for non-default locales; the sitemap paths don't.
+	// The home node is served at the root, so its public path is "/" (see lib/cms/homePage.ts).
 	const localeBase = locale === defaultLocale ? siteUrl : `${siteUrl}/${locale}`
-	const url = siteUrl + localizeUrl(sitemapNode.path, locale)
+	const publicPath = toPublicPath(sitemapNode.path, sitemap)
+	const url = siteUrl + localizeUrl(publicPath, locale)
 
 	return buildJsonLd({
 		page,
 		item: dynamicPageItem,
 		sitemap,
 		url,
-		path: sitemapNode.path,
+		path: publicPath,
+		isHome: publicPath === "/",
 		baseUrl: localeBase,
 		locale,
 		siteSettings: {

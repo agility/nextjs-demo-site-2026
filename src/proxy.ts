@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { checkRedirect } from './lib/cms-content/checkRedirect'
-import { isPublishedPath } from './lib/cms/publishedPaths'
+import { isPublishedPath, homePageRedirect } from './lib/cms/publishedPaths'
 import { defaultLocale, locales, isValidLocale, getLocaleFromPathname, removeLocaleFromPathname } from './lib/i18n/config'
 
 /** Next sets this cookie when draft mode is on. */
@@ -150,6 +150,16 @@ async function route(request: NextRequest) {
 		// This has to sit BEFORE the `!ext` branch below, because ".md" is an
 		// extension and that branch only handles extension-less paths.
 		const mdPath = request.nextUrl.pathname.replace(/\.md$/, "")
+
+		//the home page is served at the root, so its markdown is /index.md, not
+		///home.md (see lib/cms/homePage.ts). The page-md route maps /index to the home page.
+		const homeTarget = await homePageRedirect(mdPath)
+		if (homeTarget) {
+			const url = request.nextUrl.clone()
+			url.pathname = `${homeTarget === "/" ? "" : homeTarget}/index.md`
+			return NextResponse.redirect(url, 308)
+		}
+
 		const mdUrl = new URL(`/api/page-md${mdPath}`, request.nextUrl.origin)
 		return NextResponse.rewrite(mdUrl)
 
@@ -185,6 +195,20 @@ async function route(request: NextRequest) {
 		}
 
 
+
+		/*******************************************
+		 * THE HOME PAGE IS SERVED AT THE ROOT     *
+		 *******************************************/
+
+		//the home node has its own sitemap path (/home), but its URL is / (or /fr).
+		//Redirect the node's path permanently so there is one URL per page.
+		//See lib/cms/homePage.ts.
+		const homeTarget = await homePageRedirect(pathname)
+		if (homeTarget) {
+			const url = request.nextUrl.clone()
+			url.pathname = homeTarget
+			return NextResponse.redirect(url, 308)
+		}
 
 		/**************************************
 		 * SPECIAL CASE FOR lang= QUERY PARAM *

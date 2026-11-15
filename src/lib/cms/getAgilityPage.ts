@@ -5,6 +5,7 @@ import { getAgilityContext } from "./getAgilityContext";
 import { getSitemapFlat } from "./getSitemapFlat";
 import { getPage } from "./getPage";
 import { getContentItem } from "./getContentItem";
+import { findHomeNode } from "./homePage";
 
 export interface PageProps {
 	params: Promise<{ slug: string[], locale: string }>
@@ -77,9 +78,9 @@ export const getAgilityPage = async ({ params }: PageProps): Promise<AgilityPage
 		preview,
 	}) as { [path: string]: AgilitySitemapNode }
 
-	//the home page is the first node that actually renders something
+	//the home page is the first node that actually renders something (see ./homePage.ts)
 	const sitemapNode = path === "/"
-		? Object.values(sitemapFlat).find(n => !n.isFolder && !n.redirect)
+		? findHomeNode(sitemapFlat)
 		: sitemapFlat[path]
 
 	//no node, a folder, or a redirect node -> the caller calls notFound()

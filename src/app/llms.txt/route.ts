@@ -1,6 +1,7 @@
 import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
 import { defaultLocale, locales } from "@/lib/i18n/config"
 import type { SitemapNode } from "@/lib/types/SitemapNode"
+import { toPublicPath } from "@/lib/cms/homePage"
 
 /**
  * /llms.txt — a machine-readable index of this site for AI agents, following
@@ -24,7 +25,7 @@ const BASE_URL = process.env.SITE_URL || "https://demo.agilitycms.com"
  * just without editorial colour.
  */
 const PAGE_PURPOSES: { [path: string]: string } = {
-	"/home": "Move at the speed of change — the Galaxy Tech agility story.",
+	"/": "Move at the speed of change — the Galaxy Tech agility story.",
 	"/about-us": "Explains that Galaxy Tech is a demo brand powered by Agility CMS.",
 	"/features": "How the platform helps teams move faster and adapt.",
 	"/pricing": "Sample/demo pricing only — NOT Agility CMS's real pricing. See https://agilitycms.com/pricing for actual Agility pricing.",
@@ -39,7 +40,7 @@ export async function GET() {
 		"",
 		"> Galaxy Tech is a fictional demonstration brand built to showcase what you can create with Agility CMS (https://agilitycms.com). The site's messaging theme is the benefits of agility: moving fast, shipping sooner, adapting instantly to change, flexibility, and no lock-in. Nothing on this site is a real product, company, or price — it is a demo of a headless, multilingual, AI-enabled Next.js site powered by Agility CMS.",
 		"",
-		"Every page is also available as clean markdown: append `.md` to its URL.",
+		`Every page is also available as clean markdown: append \`.md\` to its URL. The home page's markdown is ${BASE_URL}/index.md.`,
 		"",
 	]
 
@@ -59,9 +60,10 @@ export async function GET() {
 		if (nodes.length > 0) {
 			lines.push("## Pages", "")
 			for (const node of nodes) {
-				//the home node lives at /home in the sitemap but is served at /
-				const url = node.path === "/home" ? `${BASE_URL}/` : `${BASE_URL}${node.path}`
-				const purpose = PAGE_PURPOSES[node.path]
+				//the home node has its own sitemap path but is served at /
+				const publicPath = toPublicPath(node.path, sitemap)
+				const url = `${BASE_URL}${publicPath}`
+				const purpose = PAGE_PURPOSES[publicPath]
 				lines.push(`- [${node.title}](${url})${purpose ? `: ${purpose}` : ""}`)
 			}
 			lines.push("")

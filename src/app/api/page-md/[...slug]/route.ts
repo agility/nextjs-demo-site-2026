@@ -25,7 +25,10 @@ export async function GET(
 	//page lookup gets the locale and a locale-less slug, matching the route.
 	const localePrefix = getLocaleFromPathname(rawPath, locales)
 	const locale = localePrefix || defaultLocale
-	const path = localePrefix ? (removeLocaleFromPathname(rawPath, localePrefix) || "/") : rawPath
+	const localePath = localePrefix ? (removeLocaleFromPathname(rawPath, localePrefix) || "/") : rawPath
+	//the home page is served at the root, so its markdown lives at /index.md
+	//(and /fr/index.md); the proxy redirects /home.md there. See lib/cms/homePage.ts.
+	const path = localePath === "/index" ? "/" : localePath
 
 	const pageSlug = path.split("/").filter(Boolean)
 
