@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeRaw from 'rehype-raw'
 import { CodeBlock } from '../CodeBlock'
+import { JsonLd } from '@/lib/seo/JsonLd'
 
 // Docs content ships with the repo and only changes on deploy. The `dynamic`
 // and `dynamicParams` route segment configs are rejected under
@@ -90,7 +91,7 @@ export default async function DocsPage({ params }: { params: Promise<{ slug: str
 	const docUrl = `${baseUrl}/docs/${slug.join('/')}`
 
 	// Generate structured data for Article and BreadcrumbList
-	const articleStructuredData: Record<string, any> = {
+	const articleStructuredData: Record<string, unknown> = {
 		'@context': 'https://schema.org',
 		'@type': 'Article',
 		headline: doc.title,
@@ -150,14 +151,8 @@ export default async function DocsPage({ params }: { params: Promise<{ slug: str
 	return (
 		<article>
 			{/* Structured Data */}
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(articleStructuredData) }}
-			/>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
-			/>
+			<JsonLd data={articleStructuredData} />
+			<JsonLd data={breadcrumbStructuredData} />
 			{/* Header with section and title */}
 			<header className="mb-9 space-y-1">
 				{breadcrumbs.length > 0 && (

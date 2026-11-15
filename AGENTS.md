@@ -394,7 +394,15 @@ pages that matter most. Do not "simplify" this by deleting one side.
 - `/api/mcp` — MCP server: `list_pages`, `get_page`, `search_content`.
   Imports `zod4` (aliased to `zod@^4` in package.json) because the MCP SDK needs zod 4
   while the AI SDK pins the project to zod 3. Do not change that import to `zod`.
-- JSON-LD uses one `@graph` with stable `@id`s — see `src/lib/seo/schema.ts`
+- JSON-LD: one `@graph` per page, built by `@agility/geo` in `src/lib/seo/buildPageJsonLd.ts`
+  and rendered once by the page route (`src/app/[locale]/[...slug]/page.tsx`). It holds the
+  Organization and WebSite, the WebPage (typed by the GEO tab's Page Type) and BreadcrumbList,
+  the editor's GEO tab JSON-LD (merged by `@id`), and content model mappings. To add structured
+  data for a content model, add a mapper in `src/lib/seo/contentModelMappings.ts`, keyed by the
+  model's `definitionName`; don't build it in the component. Component blocks (FAQ, pricing)
+  are allowed but reference shared nodes by `@id` (`src/lib/seo/schema.ts`).
+  **Always render JSON-LD with `<JsonLd data={...} />`** (`src/lib/seo/JsonLd.tsx`), never
+  `JSON.stringify` in `dangerouslySetInnerHTML`: it doesn't escape `</script>`.
 
 ### Image Handling with AgilityPic
 

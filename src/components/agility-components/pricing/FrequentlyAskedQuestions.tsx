@@ -3,6 +3,7 @@ import { Subheading, Heading } from '@/components/text'
 import type { UnloadedModuleProps, ContentItem } from "@agility/nextjs"
 import { getContentItem } from "@/lib/cms/getContentItem"
 import { getContentList } from "@/lib/cms/getContentList"
+import { JsonLd } from "@/lib/seo/JsonLd"
 
 interface IFrequentlyAskedQuestions {
 	subheading?: string
@@ -58,10 +59,7 @@ export const FrequentlyAskedQuestions = async ({ module, languageCode, isPreview
 
 	return (
 		<Container className='mt-20' data-agility-component={contentID}>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
-			/>
+			<JsonLd data={faqStructuredData} />
 			<section id="faqs" className="scroll-mt-8">
 				<Subheading className="text-center" data-agility-field="subheading">
 					{subheading}

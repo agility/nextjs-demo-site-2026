@@ -13,6 +13,9 @@ import { locales } from "@/lib/i18n/config"
 import { Container } from "@/components/container"
 import { Navbar } from "@/components/header/navbar"
 import { getHeaderContent } from "@/lib/cms-content/getHeaderContent"
+import { buildPageJsonLd } from "@/lib/seo/buildPageJsonLd"
+import { JsonLd } from "@/lib/seo/JsonLd"
+import type { GeoSitemapFlat } from "@agility/geo"
 
 // NOTE: the `revalidate` and `runtime` route segment configs were removed —
 // both are rejected under `cacheComponents`. Freshness now comes from
@@ -93,12 +96,28 @@ export default async function Page({ params }: PageProps) {
 	// The header (with the language switcher) is rendered here so it can use the
 	// current page's sitemap node - pageID and, for dynamic pages, contentID -
 	// to resolve the equivalent page when switching locales.
-	const { locale, isPreview } = await getAgilityContext((await params).locale);
-	const header = await getHeaderContent({ locale, preview: isPreview });
+	const { locale, isPreview, sitemap: channelName } = await getAgilityContext((await params).locale);
+	const [header, sitemap] = await Promise.all([
+		getHeaderContent({ locale, preview: isPreview }),
+		// Same cached call getAgilityPage makes, so this is a cache hit, not a second fetch.
+		getSitemapFlat({ channelName, languageCode: locale, preview: isPreview }),
+	]);
 	const node = agilityData.sitemapNode;
+
+	// ONE schema.org @graph for the page: site entities, WebPage + breadcrumbs,
+	// the editor's GEO tab JSON-LD, and content model mappings (a Post becomes a
+	// BlogPosting). See lib/seo/buildPageJsonLd.ts.
+	const jsonLd = buildPageJsonLd({
+		agilityData,
+		sitemap: sitemap as GeoSitemapFlat,
+		locale,
+		siteName: header?.siteName || "Galaxy Tech",
+		logoUrl: header?.logo?.url,
+	});
 
 	return (
 		<>
+			{jsonLd && <JsonLd data={jsonLd} />}
 			{header && (
 				<Container>
 					<Navbar

@@ -325,7 +325,7 @@ For crawlers and AI assistants that never execute JavaScript:
 | `/llms.txt` | [llmstxt.org](https://llmstxt.org) index — curated prose plus a page list generated from the CMS sitemap |
 | `/{any-page}.md` | That page as clean markdown (e.g. `/about-us.md`) |
 | `/api/mcp` | MCP server: `list_pages`, `get_page`, `search_content` |
-| JSON-LD | One `@graph` per page with stable `@id`s — see `src/lib/seo/schema.ts` |
+| JSON-LD | One `@graph` per page, built by [`@agility/geo`](https://www.npmjs.com/package/@agility/geo) in `src/lib/seo/buildPageJsonLd.ts`: Organization and WebSite, the WebPage (typed by the editor's GEO tab Page Type) with a BreadcrumbList, any JSON-LD the editor typed into the GEO tab, and content model mappings from `src/lib/seo/contentModelMappings.ts` (a blog Post becomes a BlogPosting). Components that need their own block (FAQ, pricing) reference the shared nodes by `@id`. Every block is rendered through `<JsonLd>` (`src/lib/seo/JsonLd.tsx`), which escapes `<`, `>` and `&` so editor text can't close the script tag |
 
 All of them read through the same cached CMS getters the HTML pages use, so they can
 never disagree with the rendered site and they revalidate on the same publish webhook.

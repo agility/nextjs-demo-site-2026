@@ -7,6 +7,8 @@ import { getContentItem } from "@/lib/cms/getContentItem"
 import { getContentList } from "@/lib/cms/getContentList"
 import type { IPricingTier } from "@/lib/types/IPricingTier"
 import { getRegionContentID } from '@/lib/utils/audienceRegionUtils'
+import { JsonLd } from '@/lib/seo/JsonLd'
+import { organizationId, ref } from '@/lib/seo/schema'
 
 interface IPricingCards {
 	title?: string
@@ -84,7 +86,7 @@ export const PricingCards = async ({ module, languageCode, globalData, isPreview
 	// Build Product JSON-LD structured data, one entry per pricing tier, omitting missing fields.
 	const baseUrl = process.env.SITE_URL || "https://demo.agilitycms.com"
 	const productsStructuredData = tiers.map((tier) => {
-		const offers: Record<string, any> = {
+		const offers: Record<string, unknown> = {
 			"@type": "Offer",
 			url: tier.ctaButton?.href || baseUrl,
 		}
@@ -95,9 +97,10 @@ export const PricingCards = async ({ module, languageCode, globalData, isPreview
 			offers.priceCurrency = tier.currency
 		}
 
-		const product: Record<string, any> = {
-			"@context": "https://schema.org",
+		const product: Record<string, unknown> = {
 			"@type": "Product",
+			// The Organization node lives in the page's @graph; reference it by @id.
+			brand: ref(organizationId(baseUrl)),
 			offers,
 		}
 		if (tier.name) {
@@ -111,10 +114,7 @@ export const PricingCards = async ({ module, languageCode, globalData, isPreview
 
 	return (
 		<div className="relative py-24" data-agility-component={contentID}>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(productsStructuredData) }}
-			/>
+			<JsonLd data={{ "@context": "https://schema.org", "@graph": productsStructuredData }} />
 			<Gradient backgroundType='grays' className="absolute inset-x-2 top-48 bottom-0 rounded-4xl ring-1 ring-black/5 dark:ring-white/10 ring-inset" />
 			<Container className="relative">
 				{(title || subtitle) && (

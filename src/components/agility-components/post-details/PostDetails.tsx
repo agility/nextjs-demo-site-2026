@@ -11,7 +11,6 @@ import { Button } from "../../button"
 import { PostImage } from "./PostImage"
 import { localizeUrl } from "@/lib/i18n/localizeUrl"
 import { decodeHtmlEntities } from "@/lib/utils"
-import { organizationId, webSiteId, webPageId, ref } from "@/lib/seo/schema"
 
 const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProps) => {
 	if (!dynamicPageItem) {
@@ -40,52 +39,12 @@ const PostDetails = async ({ dynamicPageItem, languageCode }: UnloadedModuleProp
 		? { ...post.image, label: decodeHtmlEntities(post.image.label) }
 		: post.image
 
-	// Build BlogPosting JSON-LD structured data, omitting any fields that are missing.
-	const baseUrl = process.env.SITE_URL || "https://demo.agilitycms.com"
-	const blogPostingStructuredData: Record<string, any> = {
-		"@context": "https://schema.org",
-		"@type": "BlogPosting",
-		publisher: {
-			"@type": "Organization",
-			name: "Galaxy Tech",
-		},
-	}
-	if (heading) {
-		blogPostingStructuredData.headline = heading
-	}
-	if (post.image?.url) {
-		blogPostingStructuredData.image = [post.image.url]
-	}
-	if (post.postDate) {
-		blogPostingStructuredData.datePublished = post.postDate
-	}
-	if (post.socialPublishedDate || post.postDate) {
-		blogPostingStructuredData.dateModified = post.socialPublishedDate || post.postDate
-	}
-	if (post.author?.fields?.name) {
-		blogPostingStructuredData.author = {
-			"@type": "Person",
-			name: post.author.fields.name,
-		}
-	}
-	if (post.slug) {
-		blogPostingStructuredData.mainEntityOfPage = {
-			"@type": "WebPage",
-			"@id": webPageId(`${baseUrl}/blog/${post.slug}`),
-		}
-	}
-	//Point at the Organization the layout defines rather than inlining another
-	//copy of it. Without the @id reference a consumer has no way to tell that
-	//this article's publisher is the same entity as the site's owner.
-	blogPostingStructuredData.publisher = ref(organizationId(baseUrl))
-	blogPostingStructuredData.isPartOf = ref(webSiteId(baseUrl))
+	// The BlogPosting JSON-LD for this post is not built here: the page route
+	// emits it in the page's single @graph, mapped from the Post content model.
+	// See lib/seo/contentModelMappings.ts.
 
 	return (
 		<Container data-agility-component={contentID}>
-			<script
-				type="application/ld+json"
-				dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingStructuredData) }}
-			/>
 			<Subheading
 				className="mt-16"
 				data-agility-field="postDate"

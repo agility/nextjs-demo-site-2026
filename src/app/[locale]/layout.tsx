@@ -16,7 +16,6 @@ import { getSettings } from '@/lib/cms-content/getSettings'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import { AnalyticsProvider } from '@/components/analytics'
 import Script from 'next/script'
-import { graph, organization, webSite } from '@/lib/seo/schema'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -54,16 +53,6 @@ export default async function LocaleLayout({
 
   // Correct the document language for non-default locales (root <html> defaults to "en").
   const htmlLang = locale === 'fr' ? 'fr' : 'en'
-  const baseUrl = process.env.SITE_URL || 'https://demo.agilitycms.com'
-  const siteName = header?.siteName || 'Galaxy Tech'
-  // ONE @graph for the site-wide entities, each with a stable @id. Pages and
-  // components reference these by @id rather than inlining their own copies,
-  // so a crawler resolves the whole site into a single entity graph.
-  // See lib/seo/schema.ts.
-  const siteGraph = graph(
-    organization({ baseUrl, name: siteName, logoUrl: header?.logo?.url }),
-    webSite({ baseUrl, name: siteName, inLanguage: htmlLang }),
-  )
 
   return (
     <>
@@ -72,11 +61,8 @@ export default async function LocaleLayout({
         dangerouslySetInnerHTML={{ __html: `document.documentElement.lang=${JSON.stringify(htmlLang)}` }}
       />
 
-      {/* Site-wide structured data for search engines and answer engines. */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(siteGraph) }}
-      />
+      {/* Structured data (JSON-LD) is rendered by the page as one @graph that
+          includes the Organization and WebSite. See lib/seo/buildPageJsonLd.ts. */}
 
       {/* The Navbar (with the language switcher) is rendered by the page so it
           can use the current page's sitemap node for locale switching. */}
