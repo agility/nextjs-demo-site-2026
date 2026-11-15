@@ -7,7 +7,7 @@ import { serializeJsonLd } from "@agility/geo"
  * Structured data carries editor-written text, and plain `JSON.stringify` leaves
  * `</script>` as-is: a heading or FAQ answer containing it would close the tag
  * and inject markup into the page. `serializeJsonLd` writes `<`, `>` and `&` as
- * the escapes `<`, `>` and `&`, which is still valid JSON that parses back to
+ * the escapes `\u003c`, `\u003e` and `\u0026`, which is still valid JSON that parses back to
  * the same value.
  */
 export function JsonLd({ data }: { data: unknown }) {
