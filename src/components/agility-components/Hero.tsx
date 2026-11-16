@@ -85,7 +85,15 @@ export const Hero = async ({ module, languageCode, isPreview }: UnloadedModulePr
 							<AgilityPic
 								data-agility-field="image"
 								image={image}
-								fallbackWidth={600}
+								// The hero image sits at the top of the page, so it's the LCP
+								// image: eager, fetchpriority="high" and a matching preload.
+								priority
+								fallbackWidth={672}
+								// Rendered width: the viewport minus the 24px gutters up to the
+								// 672px (max-w-2xl) column; from lg, half the 1280px container
+								// (minus 32px gutters and the 64px gap), so at most 608px.
+								widths={[480, 672, 960, 1216, 1344]}
+								sizes="(min-width: 1344px) 608px, (min-width: 1024px) calc(50vw - 64px), (min-width: 720px) 672px, calc(100vw - 48px)"
 								className="w-full h-auto rounded-2xl shadow-2xl ring-1 ring-black/5 dark:ring-white/10"
 							/>
 						</div>

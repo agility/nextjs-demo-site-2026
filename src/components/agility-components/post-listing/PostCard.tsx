@@ -8,9 +8,11 @@ import { ViewTransition } from 'react'
 
 interface PostCardProps {
 	post: IPostMin
+	/** The first card's image is the listing page's LCP image. */
+	priority?: boolean
 }
 
-export function PostCard({ post }: PostCardProps) {
+export function PostCard({ post, priority = false }: PostCardProps) {
 	return (
 		<Link
 			href={post.url}
@@ -22,6 +24,9 @@ export function PostCard({ post }: PostCardProps) {
 						<AgilityPic
 							image={post.image}
 							fallbackWidth={400}
+							// On the first card: eager + fetchpriority="high". It keeps the
+							// per-breakpoint crops below, so AgilityPic emits no preload.
+							priority={priority}
 							className="absolute inset-0 w-full h-full rounded-2xl bg-gray-50 dark:bg-gray-800 object-cover transition-transform duration-200 ease-in-out group-hover:scale-105 dark:grayscale"
 							// Passing BOTH width and height makes the Agility image API do the
 							// crop, which honours the focal point set in the CMS. With only a

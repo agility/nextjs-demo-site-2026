@@ -14,10 +14,11 @@ export async function Posts({ page, category, posts }: PostsProps) {
 
 	return (
 		<div className="mt-16 space-y-20 lg:mt-20 lg:space-y-20">
-			{posts.map((post) => (
+			{posts.map((post, i) => (
 				<PostCard
 					key={post.contentID}
 					post={post}
+					priority={i === 0}
 				/>
 			))}
 		</div>
