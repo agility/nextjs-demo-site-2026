@@ -16,7 +16,7 @@ The Demo Site is a comprehensive Next.js application powered by Agility CMS, sho
 
 ### Component Library
 
-- **20 component definitions** covering:
+- **21 component definitions** covering:
   - **Content Display**: Post Listing, Post Details, Testimonials, Team Listing
   - **Hero Variants**: Hero, Background Hero, A/B Test Hero, Personalized Background Hero
   - **Interactive**: Carousel, Contact Us, Frequently Asked Questions
@@ -46,7 +46,7 @@ The Demo Site is a comprehensive Next.js application powered by Agility CMS, sho
 ## Quick Links
 
 - [Content Models](./content-models.md) - All 24 content models available in Demo Site
-- [Components](./components.md) - All 20 components and their use cases
+- [Components](./components.md) - All 21 components and their use cases
 - [Pages](./pages.md) - Site structure and page organization
 - [Common Tasks](./common-tasks.md) - Demo Site-specific workflows
 

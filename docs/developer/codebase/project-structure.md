@@ -21,7 +21,7 @@ src/
 │   ├── sitemap.tsx              # Sitemap generation
 │   └── robots.tsx               # Robots.txt generation
 ├── components/
-│   ├── agility-components/       # Agility CMS components (20 components)
+│   ├── agility-components/       # Agility CMS components (21 components)
 │   │   ├── index.ts             # Component registration
 │   │   ├── BackgroundHero/
 │   │   ├── BentoSection/

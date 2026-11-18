@@ -4,7 +4,7 @@ This guide documents the component models configured in the Demo Site.
 
 ## Component Overview
 
-The Demo Site includes **20 component definitions** organized by category:
+The Demo Site includes **21 component definitions** organized by category:
 
 ### Content Display (4)
 - PostListing, PostDetails, Testimonials, TeamListing
@@ -18,8 +18,8 @@ The Demo Site includes **20 component definitions** organized by category:
 ### Layout (3)
 - BentoSection, LogoStrip, PersonalizedLogoStrip
 
-### Data Display (3)
-- CompanyStats, PricingCards, PricingTable
+### Data Display (4)
+- CompanyStats, StatsStrip, PricingCards, PricingTable
 
 ### Navigation (1)
 - Header

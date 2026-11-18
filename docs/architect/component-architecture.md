@@ -1,10 +1,10 @@
 # Demo Site: Component Architecture
 
-This guide documents the component architecture of the Demo Site, including all 20 components and their design patterns.
+This guide documents the component architecture of the Demo Site, including all 21 components and their design patterns.
 
 ## Component Overview
 
-The Demo Site includes **20 registered components** organized by category:
+The Demo Site includes **21 registered components** organized by category:
 
 ### Content Display (4)
 - PostListing, PostDetails, Testimonials, TeamListing
@@ -18,8 +18,8 @@ The Demo Site includes **20 registered components** organized by category:
 ### Layout (3)
 - BentoSection, LogoStrip, PersonalizedLogoStrip
 
-### Data Display (3)
-- CompanyStats, PricingCards, PricingTable
+### Data Display (4)
+- CompanyStats, StatsStrip, PricingCards, PricingTable
 
 ### Navigation (1)
 - Header
