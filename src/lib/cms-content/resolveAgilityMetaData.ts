@@ -7,6 +7,22 @@ import ReactHtmlParser from "html-react-parser"
 import { getContentItem } from "@/lib/cms/getContentItem"
 import { decodeHtmlEntities } from "@/lib/utils"
 import type { JSX } from "react"
+import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
+import { toPublicPath } from "@/lib/cms/homePage"
+import { localizeUrl } from "@/lib/i18n/localizeUrl"
+import { defaultLocale, locales } from "@/lib/i18n/config"
+
+/**
+ * Open Graph locale (`language_TERRITORY`) for an Agility locale code:
+ * `en-us` -> `en_US`. A code with no region (`fr`) uses the territory below,
+ * or the language alone if none is listed.
+ */
+const OG_TERRITORY: Record<string, string> = { fr: "CA" }
+const toOgLocale = (locale: string): string => {
+	const [language, region] = locale.split("-")
+	const territory = region || OG_TERRITORY[language]
+	return territory ? `${language}_${territory.toUpperCase()}` : language
+}
 
 interface Props {
 	agilityData: AgilityPageProps
@@ -17,7 +33,7 @@ interface Props {
 	parent: ResolvingMetadata
 }
 
-export const resolveAgilityMetaData = async ({ agilityData, locale, parent, isPreview }: Props): Promise<Metadata> => {
+export const resolveAgilityMetaData = async ({ agilityData, locale, sitemap, parent, isPreview }: Props): Promise<Metadata> => {
 
 
 	const header = await getHeaderContent({ locale })
@@ -134,12 +150,15 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent, isPr
 
 
 	//#region *** localized paths + resolved title/description ***
-	//NOTE: assumes slugs match across locales (en-us <-> fr). This is an acceptable
-	//fallback since we don't look up the matching localized sitemap node here.
-	const rawPath = agilityData.sitemapNode?.path
-	const path = (!rawPath || rawPath === "/") ? "" : rawPath
-	//en-us is the default locale and has no url prefix; fr is prefixed with /fr
-	const localizedPath = locale === "en-us" ? path : `/fr${path}`
+	//NOTE: assumes slugs match across locales. This is an acceptable fallback
+	//since we don't look up the matching localized sitemap node here.
+	//The home node is served at the root ("/", "/fr"), not at its own sitemap
+	//path; toPublicPath maps it (see lib/cms/homePage.ts). Same cached sitemap
+	//call getAgilityPage makes, so this is a cache hit.
+	const sitemapFlat = await getSitemapFlat({ channelName: sitemap, languageCode: locale, preview: isPreview })
+	const path = toPublicPath(agilityData.sitemapNode?.path, sitemapFlat)
+	//the default locale has no url prefix; every other locale is prefixed with /{locale}
+	const localizedPath = localizeUrl(path, locale)
 
 	const siteName = header?.siteName || "Galaxy Tech"
 
@@ -148,7 +167,7 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent, isPr
 	const description = agilityData.page?.seo?.metaDescription
 		|| `${siteName} — move at the speed of change. A demo built with Agility CMS.`
 
-	const ogLocale = locale === "fr" ? "fr_CA" : "en_US"
+	const ogLocale = toOgLocale(locale)
 
 	//openGraph is a discriminated union on `type`, so branch on isPost to keep literal types
 	//and only attach the article-only fields (publishedTime/authors/section) for Posts.
@@ -156,7 +175,7 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent, isPr
 		? {
 			title,
 			description,
-			url: localizedPath || "/",
+			url: localizedPath,
 			siteName,
 			type: "article",
 			locale: ogLocale,
@@ -168,7 +187,7 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent, isPr
 		: {
 			title,
 			description,
-			url: localizedPath || "/",
+			url: localizedPath,
 			siteName,
 			type: "website",
 			locale: ogLocale,
@@ -183,11 +202,11 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, parent, isPr
 		keywords: agilityData.page?.seo?.metaKeywords,
 		alternates: {
 			//relative paths — Next resolves them against metadataBase
-			canonical: localizedPath || "/",
+			canonical: localizedPath,
+			//one hreflang alternate per configured locale, plus x-default
 			languages: {
-				"en-us": path || "/",
-				"fr": `/fr${path || ""}` || "/fr",
-				"x-default": path || "/",
+				...Object.fromEntries(locales.map((l) => [l, localizeUrl(path, l)])),
+				"x-default": localizeUrl(path, defaultLocale),
 			},
 		},
 		openGraph,

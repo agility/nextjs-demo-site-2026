@@ -1,23 +1,13 @@
 import "server-only"
 import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
 import type { SitemapNode } from "@/lib/types/SitemapNode"
-import { type Locale, defaultLocale, isValidLocale, locales } from "./config"
+import { toPublicPath } from "@/lib/cms/homePage"
+import { localizeUrl } from "./localizeUrl"
+import { isValidLocale, locales } from "./config"
 
 type FlatSitemap = Record<string, SitemapNode>
 
 const CHANNEL_NAME = process.env.AGILITY_SITEMAP || "website"
-
-// The home page is keyed "/home" in the sitemap but served at the site root.
-const HOME_PATH = "/home"
-
-/** Build a locale-aware URL from a sitemap node's path. */
-const buildLocalizedUrl = (path: string, targetLocale: Locale): string => {
-	// The home node's path is "/home", but it lives at the site root.
-	const cleanPath = !path || path === HOME_PATH ? "/" : path
-	if (targetLocale === defaultLocale) return cleanPath
-	if (cleanPath === "/") return `/${targetLocale}`
-	return `/${targetLocale}${cleanPath}`
-}
 
 interface ResolveArgs {
 	targetLocale: string
@@ -62,5 +52,6 @@ export const resolveLocaleSwitchUrl = async ({
 
 	if (!targetNode) return null
 
-	return buildLocalizedUrl(targetNode.path, targetLocale)
+	// The home node is served at the locale root, not at its own sitemap path.
+	return localizeUrl(toPublicPath(targetNode.path, sitemap), targetLocale)
 }
