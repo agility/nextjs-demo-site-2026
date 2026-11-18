@@ -4,13 +4,13 @@ This guide documents all components available in the Demo Site instance. For gen
 
 ## Component Overview
 
-The Demo Site has **20 component definitions** organized into categories:
+The Demo Site has **21 component definitions** organized into categories:
 
 - **Content Display** (4 components)
 - **Hero Variants** (4 components)
 - **Interactive** (3 components)
 - **Layout** (3 components)
-- **Data Display** (3 components)
+- **Data Display** (4 components)
 - **Navigation** (1 component)
 
 ## Content Display Components
@@ -249,6 +249,24 @@ The Demo Site has **20 component definitions** organized into categories:
 **Use Cases:**
 - Metrics displays
 - KPI sections
+
+### Stats Strip
+
+**Purpose**: A centered heading and short description above a single row of headline stats, each shown in its own tile
+
+**Fields:**
+- Heading (required)
+- Description (optional)
+
+**Linked Content:**
+- Nested list of Stat content items (Value, e.g. "8,000+", and Name, e.g. "Creators on the platform")
+
+**Use Cases:**
+- "Trusted by" / social proof sections
+- Headline metrics on the home or about page
+
+**Tips:**
+- Four stats fill one row on desktop; values that start with a number animate as a count-up
 
 ### Pricing Cards
 

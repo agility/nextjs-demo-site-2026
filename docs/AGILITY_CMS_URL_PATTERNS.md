@@ -205,6 +205,7 @@ https://app.agilitycms.com/instance/[instance-guid]/en-us/pages/page-2/item-75
 | Bento Section | 16 | BentoSection |
 | Carousel | 50 | carousel |
 | Company Stats | 37 | CompanyStats |
+| Stats Strip | 73 | StatsStrip |
 | Contact Us | 51 | ContactUs |
 | Frequently Asked Questions | 27 | FrequentlyAskedQuestions |
 | Header | 25 | Header |

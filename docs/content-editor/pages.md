@@ -87,6 +87,7 @@ The Demo Site supports **2 locales**:
 - **BentoSection**: Feature highlights
 - **Testimonials**: Customer testimonials
 - **CompanyStats**: Key metrics
+- **StatsStrip**: Headline metrics in a single row
 
 ### About Page Components
 

@@ -41,7 +41,7 @@ src/
 │   ├── [locale]/          # Internationalized routes
 │   └── api/               # API routes (ai, preview, revalidate)
 ├── components/
-│   ├── agility-components/ # Agility CMS components (20 components)
+│   ├── agility-components/ # Agility CMS components (21 components)
 │   ├── header/            # Header components
 │   ├── footer/            # Footer components
 │   ├── ai-agent/          # AI search components
