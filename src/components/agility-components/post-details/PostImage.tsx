@@ -24,20 +24,13 @@ export const PostImage: React.FC<PostImageProps> = ({
 				priority
 				fallbackWidth={672}
 				className={className}
-				// The post body is wrapped in `max-w-2xl` at every breakpoint, so this
-				// image is never rendered wider than 672px no matter how wide the
-				// viewport gets. AgilityPic emits one URL per <source> (it has no
-				// density descriptors), so retina is handled with resolution media
-				// queries. First match wins, so the most specific rules come first.
-				sources={[
-					// 640px and up: pinned at the 672px column width.
-					{ media: "(min-width: 640px) and (min-resolution: 2dppx)", width: 1344 },
-					{ media: "(min-width: 640px)", width: 672 },
-					// Below 640px: the viewport minus the container's 24px gutters,
-					// so ~440px covers the widest phones.
-					{ media: "(min-resolution: 2dppx)", width: 880 },
-					{ media: "(max-width: 639px)", width: 440 },
-				]}
+				// This is the post page's LCP image. The post body is wrapped in
+				// `max-w-2xl` (672px) at every breakpoint; below 640px it is the
+				// viewport minus the container's 24px gutters. A width-descriptor
+				// srcset lets the browser pick for its screen density, and (unlike
+				// `sources`) lets `priority` emit a matching <link rel="preload">.
+				widths={[440, 672, 880, 1344]}
+				sizes="(min-width: 640px) 672px, calc(100vw - 48px)"
 			/>
 		</ViewTransition>
 	)
