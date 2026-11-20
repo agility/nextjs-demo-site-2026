@@ -11,6 +11,7 @@ import { getSitemapFlat } from "@/lib/cms/getSitemapFlat"
 import { toPublicPath } from "@/lib/cms/homePage"
 import { localizeUrl } from "@/lib/i18n/localizeUrl"
 import { defaultLocale, locales } from "@/lib/i18n/config"
+import { resolveLocaleSwitchUrl } from "@/lib/i18n/resolveLocaleSwitchUrl"
 
 /**
  * Open Graph locale (`language_TERRITORY`) for an Agility locale code:
@@ -169,6 +170,23 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, sitemap, par
 
 	const ogLocale = toOgLocale(locale)
 
+	//hreflang: list only the locales that really have this page. Assuming the slug
+	//exists in every locale advertised /fr/... twins of English-only posts, which
+	//404 (Ahrefs, 2026-11-17). Same sitemap lookup the language switcher uses.
+	const localeEntries = await Promise.all(locales.map(async (l): Promise<[string, string | null]> => [
+		l,
+		l === locale
+			? localizedPath
+			: await resolveLocaleSwitchUrl({
+				targetLocale: l,
+				pageID: agilityData.sitemapNode?.pageID ?? 0,
+				contentID: agilityData.sitemapNode?.contentID,
+				preview: isPreview,
+			}).catch(() => null),
+	]))
+	const languages = Object.fromEntries(localeEntries.filter((e): e is [string, string] => e[1] !== null))
+	if (languages[defaultLocale]) languages["x-default"] = languages[defaultLocale]
+
 	//openGraph is a discriminated union on `type`, so branch on isPost to keep literal types
 	//and only attach the article-only fields (publishedTime/authors/section) for Posts.
 	const openGraph: Metadata["openGraph"] = isPost
@@ -203,11 +221,9 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, sitemap, par
 		alternates: {
 			//relative paths — Next resolves them against metadataBase
 			canonical: localizedPath,
-			//one hreflang alternate per configured locale, plus x-default
-			languages: {
-				...Object.fromEntries(locales.map((l) => [l, localizeUrl(path, l)])),
-				"x-default": localizeUrl(path, defaultLocale),
-			},
+			//one hreflang alternate per locale that has this page, plus x-default
+			//(omitted when the page exists in only one locale)
+			...(Object.keys(languages).length > 2 ? { languages } : {}),
 		},
 		openGraph,
 		twitter: {

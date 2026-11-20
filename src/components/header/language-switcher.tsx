@@ -47,6 +47,9 @@ export function LanguageSwitcher({ currentLocale, locales, pageID, contentID }: 
           <a
             key={locale}
             href={href}
+            // nofollow: the switch route redirects to a 404 when the page has no
+            // translation, which crawlers report as a broken redirect.
+            rel="nofollow"
             title={label}
             aria-label={`Switch to ${label}`}
             className="flex size-9 items-center justify-center rounded-lg text-lg leading-none transition-colors hover:bg-black/5 dark:hover:bg-white/5"
