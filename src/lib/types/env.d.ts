@@ -10,6 +10,9 @@ declare global {
 			AGILITY_SITEMAP: string
 			AGILITY_FETCH_CACHE_DURATION: string
 			AGILITY_PATH_REVALIDATE_DURATION: string
+			// whsec_ secret of the revalidate webhook ("Enable secure delivery" in Agility).
+			// Set = /api/revalidate rejects unsigned requests.
+			WH_SECRET_REVALIDATE: string | undefined
 
 			// PostHog Environment Variables
 			NEXT_PUBLIC_POSTHOG_KEY: string
