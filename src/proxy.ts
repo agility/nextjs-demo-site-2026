@@ -67,8 +67,10 @@ const notFoundResponse = async (request: NextRequest) => {
 }
 
 /**
- * Google and Bing index only /docs on the demo site (Joel, 2026-11-03). Every
- * other response tells just those two not to index it; Algolia, Azure AI Search
+ * Google and Bing don't index the demo site. Until 2026-11-20 they indexed only
+ * /docs (Joel, 2026-11-03); those docs moved to https://agilitycms.com/docs/nextjs
+ * and /docs now redirects there (next.config.mjs, which runs before this proxy).
+ * Every response tells just those two not to index it; Algolia, Azure AI Search
  * and other crawlers still see the whole site. robots.txt deliberately does NOT
  * Disallow them: a crawler that cannot fetch a page never sees its noindex, and
  * Google keeps a blocked URL in its index as a bare link.
@@ -78,13 +80,9 @@ const notFoundResponse = async (request: NextRequest) => {
  */
 const SEARCH_ENGINE_NOINDEX = ["googlebot: noindex, follow", "bingbot: noindex, follow"]
 
-const isDocsPath = (pathname: string) => pathname === "/docs" || pathname.startsWith("/docs/") || pathname.startsWith("/docs.")
-
 export async function proxy(request: NextRequest) {
 	const res = await route(request)
-	if (!isDocsPath(request.nextUrl.pathname)) {
-		for (const value of SEARCH_ENGINE_NOINDEX) res.headers.append("X-Robots-Tag", value)
-	}
+	for (const value of SEARCH_ENGINE_NOINDEX) res.headers.append("X-Robots-Tag", value)
 	return res
 }
 
@@ -290,14 +288,13 @@ async function route(request: NextRequest) {
 		 * LOCALE BASED ROUTING *
 		 ************************/
 
-		// Skip if already has locale prefix or is a static file or docs route
+		// Skip if already has locale prefix or is a static file
 		const hasLocalePrefix = locales.some(locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`)
 		const isStaticFile = pathname.includes('.') || pathname.startsWith('/_next')
-		const isDocsRoute = pathname.startsWith('/docs')
 		const isSitemapOrRobots = pathname === '/sitemap.xml' || pathname === '/robots.txt'
 
-		// Skip locale routing for docs routes, sitemap, and robots.txt
-		if (isDocsRoute || isSitemapOrRobots) {
+		// Skip locale routing for the sitemap and robots.txt
+		if (isSitemapOrRobots) {
 			return applyCacheHeaders(NextResponse.next(), request)
 		}
 

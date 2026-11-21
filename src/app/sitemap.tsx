@@ -1,43 +1,23 @@
 import { getSitemapFlat } from "@/lib/cms/getSitemapFlat";
-import { getAllDocFiles } from "@/lib/docs/getDocsFiles";
 import { locales } from "@/lib/i18n/config";
 import { localizeUrl } from "@/lib/i18n/localizeUrl";
 import { toPublicPath } from "@/lib/cms/homePage";
 import type { MetadataRoute } from "next";
-import fs from "node:fs";
-
-/**
- * Real modification time of a docs markdown file.
- *
- * Docs ship with the repo, so the file mtime is an honest `<lastmod>` — and,
- * unlike `new Date()`, it is a stable value that `cacheComponents` is happy to
- * prerender. Returns undefined if the file cannot be stat'd, which just omits
- * the date for that entry.
- */
-const fileModified = (filePath: string): Date | undefined => {
-	try {
-		return fs.statSync(filePath).mtime
-	} catch {
-		return undefined
-	}
-}
 
 /**
  * Demo Site Sitemap
  *
- * This sitemap now covers BOTH:
- * - All Agility CMS pages for every configured locale, generated via getSitemapFlat().
- *   For the default locale, paths have no prefix; other locales are prefixed with /{locale}.
- *   Folder nodes, redirects, and pages hidden from the sitemap are excluded.
- * - The demo-site-specific /docs pages (generated from the local markdown files).
+ * Every Agility CMS page for every configured locale, generated via getSitemapFlat().
+ * For the default locale, paths have no prefix; other locales are prefixed with /{locale}.
+ * Folder nodes, redirects, and pages hidden from the sitemap are excluded.
  *
- * Note: the /docs section is specific to this demo site. In a real Agility CMS site
- * the CMS pages portion (getSitemapFlat) would typically be the whole sitemap.
+ * The site's own /docs pages moved to https://agilitycms.com/docs/nextjs (Joel,
+ * 2026-11-20); /docs now redirects there (next.config.mjs), so they aren't listed.
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	const baseUrl = process.env.SITE_URL || "https://demo.agilitycms.com";
 
-	// (a) Generate sitemap entries from Agility CMS pages, for each locale.
+	// Sitemap entries from Agility CMS pages, for each locale.
 	const cmsEntries: MetadataRoute.Sitemap = [];
 
 	for (const locale of locales) {
@@ -87,60 +67,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		}
 	}
 
-	// (b) Generate sitemap entries for documentation pages.
-	const docsEntries: MetadataRoute.Sitemap = [];
-	const addedPaths = new Set<string>();
-
-	// This is demo-site-specific - in a real site, you'd generate from Agility CMS pages
-	const docFiles = getAllDocFiles();
-
-	docFiles.forEach((file) => {
-		const isReadme = file.slug[file.slug.length - 1] === 'README';
-
-		if (isReadme) {
-			// Skip root README (docs/README.md) - it's handled by the explicit docs index entry below
-			if (file.slug.length === 1 && file.slug[0] === 'README') {
-				return;
-			}
-
-			// For README files, add the folder path (without README)
-			const folderPath = file.slug.slice(0, -1).join('/');
-			if (folderPath && !addedPaths.has(folderPath)) {
-				docsEntries.push({
-					url: `${baseUrl}/docs/${folderPath}`,
-					lastModified: fileModified(file.filePath),
-					changeFrequency: "weekly" as const,
-					priority: 0.8
-				});
-				addedPaths.add(folderPath);
-			}
-		} else {
-			// For regular files, add the file path
-			const filePath = file.slug.join('/');
-			if (filePath && !addedPaths.has(filePath)) {
-				docsEntries.push({
-					url: `${baseUrl}/docs/${filePath}`,
-					lastModified: fileModified(file.filePath),
-					changeFrequency: "weekly" as const,
-					priority: 0.8
-				});
-				addedPaths.add(filePath);
-			}
-		}
-	});
-
-	// Add docs index page
-	docsEntries.unshift({
-		url: `${baseUrl}/docs`,
-		// newest doc wins for the index page
-		lastModified: docFiles.reduce<Date | undefined>((newest, f) => {
-			const m = fileModified(f.filePath)
-			return !newest || (m && m > newest) ? m : newest
-		}, undefined),
-		changeFrequency: "weekly" as const,
-		priority: 0.9
-	});
-
-	// Merge CMS page entries with the demo /docs entries.
-	return [...cmsEntries, ...docsEntries];
+	return cmsEntries;
 }
