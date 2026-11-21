@@ -96,6 +96,9 @@ NODE_ENV=development
 
 # Build Hook (Optional - for redirect rebuilds)
 BUILD_HOOK_URL=https://your-build-hook-url
+# The revalidate webhook's whsec_ secret (tick "Enable secure delivery" on the webhook in Agility).
+# Once set, /api/revalidate rejects requests without a valid signature.
+WH_SECRET_REVALIDATE=whsec_...
 ```
 
 ### Development
@@ -402,7 +405,7 @@ itself (the check is skipped in dev). Add hand-written routes to `APP_PATHS` or
 ### Cache Not Updating
 - Verify webhook is configured in Agility CMS
 - Check `/api/revalidate` endpoint is accessible
-- Check the webhook's Delivery History in Agility for errors (`AGILITY_SECURITY_KEY` validates preview requests, not webhooks)
+- Check the webhook's Delivery History in Agility for errors. A 401 means `WH_SECRET_REVALIDATE` doesn't match the webhook's secret (`AGILITY_SECURITY_KEY` validates preview requests, not webhooks)
 
 ## 🤝 Contributing
 

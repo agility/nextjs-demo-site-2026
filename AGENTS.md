@@ -571,6 +571,7 @@ import { renderHTML } from "@agility/nextjs"
 - `AGILITY_API_FETCH_KEY` - Production API key
 - `AGILITY_API_PREVIEW_KEY` - Preview API key
 - `AGILITY_SECURITY_KEY` - Security key used to validate preview requests (not webhooks)
+- `WH_SECRET_REVALIDATE` - The revalidate webhook's `whsec_` secret. When set, `/api/revalidate` verifies the Standard Webhooks signature (`src/lib/webhooks/readAgilityWebhook.ts`) and rejects anything else with a 401
 - `AGILITY_LOCALES` - Comma-separated locales (e.g., "en-us,fr-ca,es-mx")
 - `AGILITY_SITEMAP` - Sitemap channel name (default: "website")
 - `AGILITY_FETCH_CACHE_DURATION` - Cache duration for fetches
