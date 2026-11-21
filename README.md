@@ -348,13 +348,7 @@ never disagree with the rendered site and they revalidate on the same publish we
 
 ### Where the docs live
 
-This site's documentation now lives on the main Agility docs site at **[agilitycms.com/docs/nextjs](https://agilitycms.com/docs/nextjs)**. `/docs` on the demo site redirects there (since 2026-11-20).
-
-The `docs/` folder in this repo stays as documentation for people and agents working on the codebase. It includes:
-- **Admin Guides** - Instance configuration, content models, components, workflows
-- **Architect Guides** - Site architecture, component design, content architecture, integrations
-- **Content Editor Guides** - Common tasks, components, content models, pages
-- **Developer Guides** - Codebase structure, environment variables, multi-locale setup, personalization, view transitions
+This site's documentation lives on the main Agility docs site, starting at **[Using the Advanced Next.js Demo Site](https://agilitycms.com/docs/nextjs/using-the-advanced-next-js-demo-site)**. It covers the content model, personalization, analytics, AI search and MCP, view transitions and multi-locale routing. `/docs` on the demo site redirects there.
 
 **Note**: For generic Agility CMS training and documentation, see the [Official Agility CMS Training Guide](https://agilitycms.com/docs/training-guide).
 
@@ -366,21 +360,13 @@ The `docs/` folder in this repo stays as documentation for people and agents wor
 - [Claude Context](CLAUDE.md) - Stub file pointing to AGENTS.md
 
 ### Full Documentation
-- **[📖 Agility CMS Next.js docs](https://agilitycms.com/docs/nextjs)** - Where this site's docs now live (`/docs` on the demo site redirects there)
-- **[📖 Documentation Index](docs/README.md)** - Documentation source files
-
-**Developer Docs:**
-- [Codebase Guide](docs/developer/codebase/README.md) - Project structure and implementation
-- [Environment Variables](docs/developer/ENVIRONMENT_VARIABLES.md) - Strongly typed env configuration
-- [Multi-Locale Implementation](docs/developer/MULTI_LOCALE_IMPLEMENTATION.md) - i18n setup and routing
-- [Audience & Region System](docs/developer/AUDIENCE_REGION_SYSTEM.md) - Personalization system
-- [View Transitions](docs/developer/VIEW_TRANSITIONS.md) - Page transition implementation
-
-**Agility CMS Training:**
-- [Content Editor Guide](docs/content-editor/README.md) - Creating and managing content
-- [Administrator Guide](docs/admin/README.md) - Instance configuration
-- [Architect Guide](docs/architect/README.md) - Architecture decisions
-- [URL Patterns](docs/AGILITY_CMS_URL_PATTERNS.md) - Agility CMS interface URLs
+- **[Using the Advanced Next.js Demo Site](https://agilitycms.com/docs/nextjs/using-the-advanced-next-js-demo-site)** - Overview, content model and setup
+- [Audience and Region Personalization](https://agilitycms.com/docs/nextjs/audience-and-region-personalization-with-next-js)
+- [Analytics Layer with PostHog](https://agilitycms.com/docs/nextjs/analytics-layer-with-posthog-in-next-js)
+- [AI Search, Clean Markdown and an MCP Server](https://agilitycms.com/docs/nextjs/ai-search-markdown-and-mcp-endpoints)
+- [Shared-Element Page Transitions](https://agilitycms.com/docs/nextjs/view-transitions-with-next-js)
+- [Multi-Locale Support with Next.js](https://agilitycms.com/docs/nextjs/multi-locale-support-with-next-js)
+- [Agility App URL Patterns](https://agilitycms.com/docs/developers/agility-app-url-patterns)
 
 **External Resources:**
 - [Official Agility CMS Docs](https://agilitycms.com/docs) - Agility CMS documentation
@@ -416,7 +402,7 @@ itself (the check is skipped in dev). Add hand-written routes to `APP_PATHS` or
 ### Cache Not Updating
 - Verify webhook is configured in Agility CMS
 - Check `/api/revalidate` endpoint is accessible
-- Ensure `AGILITY_SECURITY_KEY` matches webhook configuration
+- Check the webhook's Delivery History in Agility for errors (`AGILITY_SECURITY_KEY` validates preview requests, not webhooks)
 
 ## 🤝 Contributing
 
