@@ -346,16 +346,11 @@ never disagree with the rendered site and they revalidate on the same publish we
 
 ## 📚 Documentation
 
-### In-Site Documentation (`/docs`)
+### Where the docs live
 
-**⚠️ Important**: This demo site includes an in-site documentation system accessible at `/docs`. This is **specific to this demo site** and is **not part of a normal Agility CMS site**. It's included here to document:
+This site's documentation now lives on the main Agility docs site at **[agilitycms.com/docs/nextjs](https://agilitycms.com/docs/nextjs)**. `/docs` on the demo site redirects there (since 2026-11-20).
 
-- Demo site architecture and implementation patterns
-- Instance-specific Agility CMS configuration
-- Codebase structure and developer guides
-- Content editor workflows for this specific demo
-
-The documentation is built using MDX routing with markdown files in the `docs/` folder. It includes:
+The `docs/` folder in this repo stays as documentation for people and agents working on the codebase. It includes:
 - **Admin Guides** - Instance configuration, content models, components, workflows
 - **Architect Guides** - Site architecture, component design, content architecture, integrations
 - **Content Editor Guides** - Common tasks, components, content models, pages
@@ -371,7 +366,7 @@ The documentation is built using MDX routing with markdown files in the `docs/` 
 - [Claude Context](CLAUDE.md) - Stub file pointing to AGENTS.md
 
 ### Full Documentation
-- **[📖 In-Site Documentation](https://demo.agilitycms.com/docs)** - Complete documentation guide (demo site specific)
+- **[📖 Agility CMS Next.js docs](https://agilitycms.com/docs/nextjs)** - Where this site's docs now live (`/docs` on the demo site redirects there)
 - **[📖 Documentation Index](docs/README.md)** - Documentation source files
 
 **Developer Docs:**

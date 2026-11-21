@@ -2,13 +2,14 @@
 
 # Demo Site Robots Configuration
 # Every crawler may crawl the whole site. Algolia, Azure AI Search and the AI
-# crawlers below index all of it; Google and Bing index only /docs.
+# crawlers below index all of it; Google and Bing index none of it.
 #
-# That limit is NOT set here. Pages outside /docs send "noindex" to googlebot and
-# bingbot only (X-Robots-Tag from src/proxy.ts, plus meta tags on CMS pages). A
-# Disallow would hide that noindex from them, and Google keeps a blocked URL in
-# its index as a bare link, so do not add one.
-# The sitemap is generated from Agility CMS pages (via getSitemapFlat()) plus the demo /docs section.
+# That limit is NOT set here. Every page sends "noindex" to googlebot and bingbot
+# only (X-Robots-Tag from src/proxy.ts, plus meta tags on CMS pages). A Disallow
+# would hide that noindex from them, and Google keeps a blocked URL in its index
+# as a bare link, so do not add one.
+# The sitemap is generated from Agility CMS pages (via getSitemapFlat()).
+# /docs redirects to https://agilitycms.com/docs/nextjs, where the docs now live.
 
 sitemap: https://demo.agilitycms.com/sitemap.xml
 

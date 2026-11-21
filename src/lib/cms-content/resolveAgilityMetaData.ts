@@ -219,9 +219,9 @@ export const resolveAgilityMetaData = async ({ agilityData, locale, sitemap, par
 		},
 
 		generator: `Agility CMS`,
-		//Google and Bing index only /docs on the demo site (Joel, 2026-11-03), which
-		//this resolver never serves. Other crawlers — Algolia, Azure AI Search —
-		//still index these pages. The proxy sends the same rule as an X-Robots-Tag.
+		//Google and Bing don't index the demo site (only /docs until it moved to
+		//agilitycms.com/docs/nextjs on 2026-11-20). Other crawlers — Algolia, Azure
+		//AI Search — still index these pages. The proxy sends the same rule as an X-Robots-Tag.
 		robots: { googleBot: { index: false, follow: true } },
 		other: { ...otherMetaData, bingbot: "noindex, follow" }
 

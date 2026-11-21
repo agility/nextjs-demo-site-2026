@@ -30,8 +30,10 @@ const nextConfig = {
 		],
 	},
 	async redirects() {
-		// These /docs namespaces belong to the official Agility docs site, not this
-		// repo's file-based docs — inbound links exist, so redirect instead of 404ing.
+		// The demo site's docs moved to the main Agility docs site (Joel, 2026-11-20).
+		// A few old /docs namespaces map to specific pages there; everything else under
+		// /docs goes to the Next.js docs. Order matters: the first match wins, so the
+		// catch-alls stay last.
 		return [
 			{
 				source: "/docs/generic/04-content-basics",
@@ -66,6 +68,16 @@ const nextConfig = {
 			{
 				source: "/docs/developers/:path*",
 				destination: "https://agilitycms.com/docs/developers/:path*",
+				permanent: true,
+			},
+			{
+				source: "/docs",
+				destination: "https://agilitycms.com/docs/nextjs",
+				permanent: true,
+			},
+			{
+				source: "/docs/:path*",
+				destination: "https://agilitycms.com/docs/nextjs",
 				permanent: true,
 			},
 		]

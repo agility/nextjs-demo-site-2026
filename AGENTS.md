@@ -67,31 +67,16 @@ src/
 │   ├── cms-content/        # Content processing utilities
 │   ├── ai/                # AI integration utilities
 │   ├── posthog/           # Analytics integration
-│   ├── docs/              # Documentation utilities (MDX routing, file parsing)
 │   └── types/             # TypeScript definitions
-├── docs/                  # Documentation markdown files (source for /docs route)
+├── docs/                  # Repo documentation (markdown, read in the repo; not served by the site)
 └── public/                # Static assets organized by category
 ```
 
-### In-Site Documentation System (`/docs`)
+### Documentation (`docs/` and the `/docs` URL)
 
-**⚠️ Important**: This demo site includes an in-site documentation system accessible at `/docs`. This is **specific to this demo site** and is **not part of a normal Agility CMS site**. It's included here to document the demo site's architecture, implementation patterns, and instance-specific configuration.
+The site no longer serves its own docs. Until 2026-11-20 the `docs/` markdown was rendered at `/docs`; that content moved to the main Agility docs site, and **`/docs` and everything under it now redirect (308) to [https://agilitycms.com/docs/nextjs](https://agilitycms.com/docs/nextjs)** (`redirects()` in `next.config.mjs`; a few older `/docs/*` namespaces map to specific pages there first). The sitemap lists CMS pages only.
 
-**Key Points:**
-- **Purpose**: Documents this specific demo site, not generic Agility CMS concepts
-- **Implementation**: MDX routing using `react-markdown` to render markdown files from the `docs/` folder
-- **Routing**: Dynamic routes via `src/app/docs/[...slug]/page.tsx` that serve markdown files
-- **Layout**: Custom layout with sidebar navigation (`src/app/docs/layout.tsx`)
-- **Content**: Markdown files in `docs/` folder organized by role (admin, architect, content-editor, developer)
-- **Features**: Breadcrumbs, SEO metadata, structured data, dark mode support
-
-**Files:**
-- `src/app/docs/layout.tsx` - Documentation layout with header, sidebar, and footer
-- `src/app/docs/page.tsx` - Documentation index/homepage
-- `src/app/docs/[...slug]/page.tsx` - Dynamic route handler for individual doc pages
-- `src/lib/docs/getDocsFiles.ts` - Utilities for reading and parsing markdown files, building navigation tree
-
-**Note**: For generic Agility CMS training and documentation, direct users to the [Official Agility CMS Training Guide](https://agilitycms.com/docs/training-guide). The in-site docs focus on demo-site-specific information.
+The `docs/` folder stays in the repo as documentation for people and agents working on this codebase. For generic Agility CMS training, point users to the [Official Agility CMS Training Guide](https://agilitycms.com/docs/training-guide).
 
 ## Development Commands
 
@@ -774,7 +759,7 @@ import { unstable_ViewTransition as ViewTransition } from 'react'
 
 - **Documentation Maintenance**: **Always update relevant documentation** when making code changes. See the "Documentation Maintenance" section above for details.
 - **Leverage the Agility MCP Server**: When working with AI assistants, use the MCP server to query CMS schemas, create content models, and manage content directly
-- **In-Site Documentation**: Remember that the `/docs` route is demo-site-specific and not part of a normal Agility CMS site. It documents this demo's architecture and implementation.
+- **Documentation**: `/docs` redirects to https://agilitycms.com/docs/nextjs; don't add a docs route back. The `docs/` folder is repo documentation only.
 - Always check existing component patterns before creating new ones
 - Use the established TypeScript interfaces for consistency
 - Follow the Agility CMS SDK patterns for content fetching

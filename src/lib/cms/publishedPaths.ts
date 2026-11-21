@@ -25,7 +25,6 @@ const APP_PATHS = new Set([
 
 /** Route prefixes this app owns. */
 const APP_PREFIXES = [
-	"/docs",   // the demo site's own file-based docs
 	"/api",    // route handlers (also excluded by the proxy matcher)
 	"/_next",
 ]
