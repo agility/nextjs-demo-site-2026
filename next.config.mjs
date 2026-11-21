@@ -31,10 +31,37 @@ const nextConfig = {
 	},
 	async redirects() {
 		// The demo site's docs moved to the main Agility docs site (Joel, 2026-11-20).
-		// A few old /docs namespaces map to specific pages there; everything else under
-		// /docs goes to the Next.js docs. Order matters: the first match wins, so the
-		// catch-alls stay last.
+		// Old pages whose content now has its own article go straight to it (and
+		// their ".md" variants, which were served too); the old docs index and its
+		// sections go to the demo overview; a few older /docs namespaces map to
+		// specific pages; everything else under /docs goes to the Next.js docs.
+		// Order matters: the first match wins, so the catch-alls stay last.
+		const DOCS = "https://agilitycms.com/docs"
+		const OVERVIEW = `${DOCS}/nextjs/using-the-advanced-next-js-demo-site`
+		const retiredDocs = [
+			["/docs/developer/MULTI_LOCALE_IMPLEMENTATION", `${DOCS}/nextjs/multi-locale-support-with-next-js`],
+			["/docs/developer/AUDIENCE_REGION_SYSTEM", `${DOCS}/nextjs/audience-and-region-personalization-with-next-js`],
+			["/docs/developer/VIEW_TRANSITIONS", `${DOCS}/nextjs/view-transitions-with-next-js`],
+			["/docs/developer/ANALYTICS_INTEGRATION", `${DOCS}/nextjs/analytics-layer-with-posthog-in-next-js`],
+			["/docs/developer/ANALYTICS_DASHBOARD", `${DOCS}/nextjs/analytics-layer-with-posthog-in-next-js`],
+			["/docs/POSTHOG_IMPLEMENTATION", `${DOCS}/nextjs/analytics-layer-with-posthog-in-next-js`],
+			["/docs/developer/AB_TESTING", `${DOCS}/owners-admins/a-b-n-testing-in-agility-cms`],
+			["/docs/developer/codebase/api-routes", `${DOCS}/nextjs/ai-search-markdown-and-mcp-endpoints`],
+			["/docs/agility-pic-component", `${DOCS}/nextjs/using-the-agilitypic-component-for-responsive-images`],
+			["/docs/image-recos", `${DOCS}/overview/image-best-practices`],
+			["/docs/AGILITY_CMS_URL_PATTERNS", `${DOCS}/developers/agility-app-url-patterns`],
+		]
+		const overviewSections = ["admin", "architect", "content-editor", "developer", "assets"]
 		return [
+			...retiredDocs.flatMap(([source, destination]) => [
+				{ source, destination, permanent: true },
+				{ source: `${source}.md`, destination, permanent: true },
+			]),
+			...overviewSections.flatMap((section) => [
+				{ source: `/docs/${section}`, destination: OVERVIEW, permanent: true },
+				{ source: `/docs/${section}.md`, destination: OVERVIEW, permanent: true },
+				{ source: `/docs/${section}/:path*`, destination: OVERVIEW, permanent: true },
+			]),
 			{
 				source: "/docs/generic/04-content-basics",
 				destination: "https://agilitycms.com/docs/training-guide/content-editor-content-basics",
@@ -72,7 +99,7 @@ const nextConfig = {
 			},
 			{
 				source: "/docs",
-				destination: "https://agilitycms.com/docs/nextjs",
+				destination: OVERVIEW,
 				permanent: true,
 			},
 			{

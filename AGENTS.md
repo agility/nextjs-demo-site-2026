@@ -53,7 +53,6 @@ src/
 ├── app/                    # Next.js App Router pages
 │   ├── [locale]/          # Internationalized routes
 │   ├── api/               # API routes (ai, preview, revalidate, etc.)
-│   └── docs/              # In-site documentation (demo site specific - see below)
 ├── components/             # Reusable UI components
 │   ├── agility-components/ # CMS-connected components (RichTextArea, BentoSection, etc.)
 │   ├── agility-pages/      # Page-level components
@@ -68,15 +67,12 @@ src/
 │   ├── ai/                # AI integration utilities
 │   ├── posthog/           # Analytics integration
 │   └── types/             # TypeScript definitions
-├── docs/                  # Repo documentation (markdown, read in the repo; not served by the site)
 └── public/                # Static assets organized by category
 ```
 
-### Documentation (`docs/` and the `/docs` URL)
+### Documentation lives on agilitycms.com
 
-The site no longer serves its own docs. Until 2026-11-20 the `docs/` markdown was rendered at `/docs`; that content moved to the main Agility docs site, and **`/docs` and everything under it now redirect (308) to [https://agilitycms.com/docs/nextjs](https://agilitycms.com/docs/nextjs)** (`redirects()` in `next.config.mjs`; a few older `/docs/*` namespaces map to specific pages there first). The sitemap lists CMS pages only.
-
-The `docs/` folder stays in the repo as documentation for people and agents working on this codebase. For generic Agility CMS training, point users to the [Official Agility CMS Training Guide](https://agilitycms.com/docs/training-guide).
+This repo has no docs folder. The demo's documentation is on the main Agility docs site (content in the docs Agility instance), starting at [Using the Advanced Next.js Demo Site](https://agilitycms.com/docs/nextjs/using-the-advanced-next-js-demo-site), with articles on personalization, analytics, AI search and MCP, view transitions and multi-locale routing. `/docs` on the demo site redirects there (`redirects()` in `next.config.mjs`). For generic Agility CMS training, point users to the [Official Agility CMS Training Guide](https://agilitycms.com/docs/training-guide).
 
 ## Development Commands
 
@@ -198,10 +194,8 @@ The MCP server is configured automatically when using AI assistants that support
 
 **Documentation Locations:**
 - `AGENTS.md` - Main AI agent instructions (this file) - Update sections that describe how things work
-- `docs/developer/` - Developer documentation - Update relevant markdown files
-- `docs/architect/` - Architecture documentation - Update when architectural patterns change
-- `docs/content-editor/` - Content editor guides - Update when CMS components or workflows change
-- `docs/admin/` - Admin documentation - Update when configuration or setup changes
+- `README.md` - Setup and overview
+- The public articles on agilitycms.com/docs. They are CMS content, not files in this repo. If a code change makes one wrong, say so in the PR so the article can be updated. Start from the [demo overview](https://agilitycms.com/docs/nextjs/using-the-advanced-next-js-demo-site).
 
 **When to Update Documentation:**
 - Adding new features or functionality
@@ -222,8 +216,7 @@ The MCP server is configured automatically when using AI assistants that support
 
 **Example**: If you modify middleware query string handling, update:
 - `AGENTS.md` - "Search Params Handling" section
-- `docs/developer/MULTI_LOCALE_IMPLEMENTATION.md` - Middleware processing steps
-- `docs/developer/AUDIENCE_REGION_SYSTEM.md` - Query parameter information
+- Note in the PR that the docs articles on multi-locale routing and audience/region personalization need the same change
 
 ## CMS Integration Patterns
 
@@ -577,7 +570,7 @@ import { renderHTML } from "@agility/nextjs"
 - `AGILITY_GUID` - Agility instance GUID
 - `AGILITY_API_FETCH_KEY` - Production API key
 - `AGILITY_API_PREVIEW_KEY` - Preview API key
-- `AGILITY_SECURITY_KEY` - Security key for webhooks
+- `AGILITY_SECURITY_KEY` - Security key used to validate preview requests (not webhooks)
 - `AGILITY_LOCALES` - Comma-separated locales (e.g., "en-us,fr-ca,es-mx")
 - `AGILITY_SITEMAP` - Sitemap channel name (default: "website")
 - `AGILITY_FETCH_CACHE_DURATION` - Cache duration for fetches
@@ -759,7 +752,7 @@ import { unstable_ViewTransition as ViewTransition } from 'react'
 
 - **Documentation Maintenance**: **Always update relevant documentation** when making code changes. See the "Documentation Maintenance" section above for details.
 - **Leverage the Agility MCP Server**: When working with AI assistants, use the MCP server to query CMS schemas, create content models, and manage content directly
-- **Documentation**: `/docs` redirects to https://agilitycms.com/docs/nextjs; don't add a docs route back. The `docs/` folder is repo documentation only.
+- **Documentation**: `/docs` redirects to agilitycms.com/docs (see `next.config.mjs`); don't add a docs route or a docs folder back. The docs are CMS content on the Agility docs site, starting at https://agilitycms.com/docs/nextjs/using-the-advanced-next-js-demo-site.
 - Always check existing component patterns before creating new ones
 - Use the established TypeScript interfaces for consistency
 - Follow the Agility CMS SDK patterns for content fetching
