@@ -10,16 +10,44 @@ interface LogoProps {
   logo?: ImageField
 }
 
+/** An SVG file by its path, ignoring any query string or fragment. */
+const isSvg = (url: string) => /\.svg$/i.test(url.split(/[?#]/)[0])
+
 export function Logo({ className, logo }: LogoProps) {
   // If a logo is provided from CMS, use that
   if (logo && logo.url) {
-    return <div className='p-1 bg-white/30 rounded-full'><img
+    // An SVG logo (often a single-colour icon with no fill set, which renders black) is drawn
+    // as a mask filled with the current text colour, so it matches the site name in light and
+    // dark mode. The SVG's own opacity is kept, so a duotone icon stays duotone.
+    if (isSvg(logo.url)) {
+      const ratio = logo.width > 0 && logo.height > 0 ? logo.width / logo.height : 1
+      return (
+        <span
+          role="img"
+          aria-label={logo.label || "Logo"}
+          className={clsx(className, 'inline-block shrink-0 bg-current')}
+          style={{
+            aspectRatio: ratio,
+            maskImage: `url("${logo.url}")`,
+            WebkitMaskImage: `url("${logo.url}")`,
+            maskSize: 'contain',
+            WebkitMaskSize: 'contain',
+            maskRepeat: 'no-repeat',
+            WebkitMaskRepeat: 'no-repeat',
+            maskPosition: 'center',
+            WebkitMaskPosition: 'center',
+          }}
+        />
+      )
+    }
+
+    return <img
       src={logo.url}
       alt={logo.label || "Logo"}
       className={className}
       width={logo.width}
       height={logo.height}
-    /></div>
+    />
   }
 
   // Fallback to the SVG logo
