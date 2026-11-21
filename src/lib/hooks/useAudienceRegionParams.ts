@@ -205,8 +205,9 @@ export function getAudienceRegionFromSearchParams(
   const audienceName = typeof searchParams.audience === 'string' ? searchParams.audience : null
   const regionName = typeof searchParams.region === 'string' ? searchParams.region : null
 
+  // ?audience= carries the toAudienceParam form ("Financial Services" -> "financialservices")
   const selectedAudience = audienceName
-    ? audiences.find(a => a.name === audienceName) || null
+    ? audiences.find(a => toAudienceParam(a.name) === audienceName) || null
     : null
 
   const selectedRegion = regionName
