@@ -48,14 +48,11 @@ export const getAgilityPage = async ({ params }: PageProps): Promise<AgilityPage
 	if (lastSlug && lastSlug.startsWith("~~~") && lastSlug.endsWith("~~~")) {
 		//we have search params encoded here
 		lastSlug = lastSlug.replace(/~~~+/g, "")
-		const decoded = decodeURIComponent(lastSlug)
-		const parts = decoded.split("&").map(part => part.trim())
-
-		parts.forEach(part => {
-			const kvp = part.split("=")
-			if (kvp.length === 2) {
-				searchParams[kvp[0]] = kvp[1]
-			}
+		//the proxy builds the query with URLSearchParams, which writes a space as
+		//"+" and a literal "+" as "%2B" — so parse it back the same way, or a
+		//region named "New Zealand" arrives as "New+Zealand" and never matches
+		new URLSearchParams(decodeURIComponent(lastSlug)).forEach((value, key) => {
+			searchParams[key] = value
 		})
 
 		slugParts = slugParts.slice(0, slugParts.length - 1)

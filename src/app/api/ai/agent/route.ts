@@ -1,4 +1,4 @@
-import { convertToModelMessages, streamText, type UIMessage } from 'ai'
+import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from 'ai'
 import { validateAIEnvironment, validateAlgoliaEnvironment, getAIModel } from '@/lib/ai/providers'
 import { createSearchTool } from '@/lib/ai/searchTool'
 import { createContactCaptureTool } from '@/lib/ai/contactCaptureTool'
@@ -123,6 +123,9 @@ Remember: You represent this website, so maintain a professional yet friendly de
         temperature: aiConfig.temperature,
         maxOutputTokens: aiConfig.maxTokens,
         toolChoice: 'auto', // Let the model decide when to use tools
+        // Without this the AI SDK stops after one step, so after a tool call the
+        // model never gets a turn to answer. Same limit as /api/ai/search.
+        stopWhen: stepCountIs(5),
       })
 
       return result.toUIMessageStreamResponse()
