@@ -1,10 +1,11 @@
 
 
 import { revalidatePath, revalidateTag } from "next/cache";
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import agilitySDK from "@agility/content-fetch"
 import type { SitemapNode } from "@/lib/types/SitemapNode";
 import { publishPostToSocial } from "@/lib/social/publishPost";
+import { readAgilityWebhook } from "@/lib/webhooks/readAgilityWebhook";
 
 interface IRevalidateRequest {
 	state: string,
@@ -18,10 +19,21 @@ interface IRevalidateRequest {
 	changeDateUTC?: string
 }
 
+/**
+ * Agility publish webhook -> cache tag revalidation.
+ *
+ * Configure in Agility (Settings > Webhooks): POST {site}/api/revalidate, with
+ * "Enable secure delivery" ticked, and put that webhook's whsec_ secret in
+ * WH_SECRET_REVALIDATE. Once the variable is set, unsigned or tampered requests
+ * get a 401, so only Agility can clear caches or trigger BUILD_HOOK_URL.
+ * (AGILITY_SECURITY_KEY is unrelated: it validates preview requests.)
+ */
 export async function POST(req: NextRequest) {
 
-	//parse the body
-	const data = await req.json() as IRevalidateRequest
+	//verify (when WH_SECRET_REVALIDATE is set) and parse the body
+	const webhook = await readAgilityWebhook<IRevalidateRequest>(req, "WH_SECRET_REVALIDATE")
+	if (!webhook.ok) return webhook.response
+	const data = webhook.body
 
 	//a publish makes content live; a delete/unpublish takes it offline. Both can
 	//change the sitemap (a node is added, renamed, or removed), so both need the
