@@ -53,27 +53,32 @@ interface ABTestHeroClientProps {
  * This is acceptable given the performance benefits of keeping routes static.
  */
 export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTestHeroClientProps) => {
+	// Find the control variant (default)
+	const controlVariant = allVariants.find(v => v.variant === "control") || allVariants[0]
+
+	// Check if A/B testing is actually configured:
+	// - Must have an experiment key
+	// - Must have more than just the control variant
+	const hasExperiment = Boolean(experimentKey) && allVariants.length > 1
+
 	// Use PostHog's hook - automatically tracks $feature_flag_called
-	const flagVariant = useFeatureFlagVariantKey(experimentKey)
+	// Only evaluate if we have an experiment configured
+	const flagVariant = useFeatureFlagVariantKey(hasExperiment ? experimentKey : "")
 
 	// Track mount state to avoid hydration mismatch
 	// Server and initial client render MUST match (both show control)
 	// Only after hydration do we switch to the evaluated variant
 	const [hasMounted, setHasMounted] = useState(false)
 
-	// Find the control variant (default)
-	const controlVariant = allVariants.find(v => v.variant === "control") || allVariants[0]
-
-	// Determine loading state:
-	// - Before mount: not loading (server render)
-	// - After mount but flag undefined: loading (waiting for PostHog)
-	// - After mount and flag defined: not loading
-	const isLoading = hasMounted && flagVariant === undefined
+	// Timeout state - if PostHog doesn't respond in time, use control
+	const [hasTimedOut, setHasTimedOut] = useState(false)
 
 	// Determine which variant to show
+	// - If no experiment: always show control
 	// - Before mount: always show control (matches server render)
-	// - After mount: show evaluated variant or control as fallback
-	const selectedVariant = hasMounted && flagVariant
+	// - After mount with flag result: show evaluated variant
+	// - After timeout: show control
+	const selectedVariant = hasExperiment && hasMounted && flagVariant && !hasTimedOut
 		? (allVariants.find(v => v.variant === flagVariant) || controlVariant)
 		: controlVariant
 
@@ -82,9 +87,21 @@ export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTe
 		setHasMounted(true)
 	}, [])
 
+	// Timeout for PostHog - if it doesn't respond in 2 seconds, show control
+	useEffect(() => {
+		if (!hasExperiment || flagVariant !== undefined) return
+
+		const timeout = setTimeout(() => {
+			setHasTimedOut(true)
+		}, 2000)
+
+		return () => clearTimeout(timeout)
+	}, [hasExperiment, flagVariant])
+
 	// Track exposure with our analytics abstraction (in addition to PostHog's automatic tracking)
 	useEffect(() => {
-		if (!experimentKey || !hasMounted || flagVariant === undefined) return
+		// Skip tracking if no experiment is configured or not ready
+		if (!hasExperiment || !hasMounted || flagVariant === undefined) return
 
 		let retryTimeout: NodeJS.Timeout | null = null
 		const MAX_RETRY_ATTEMPTS = 50 // 5 seconds max (50 * 100ms)
@@ -118,57 +135,26 @@ export const ABTestHeroClient = ({ experimentKey, allVariants, contentID }: ABTe
 				clearTimeout(retryTimeout)
 			}
 		}
-	}, [experimentKey, hasMounted, flagVariant, selectedVariant.variant, contentID])
+	}, [hasExperiment, experimentKey, hasMounted, flagVariant, selectedVariant.variant, contentID])
 
 	const { heading, description, callToAction, image, imagePosition = "right" } = selectedVariant
 	const isImageLeft = imagePosition === "left"
 
-	// Show skeleton while loading on client (after hydration, before flag evaluation)
-	if (isLoading) {
-		return (
-			<section
-				className="pt-20"
-				data-agility-component={contentID}
-				data-experiment-key={experimentKey}
-				data-variant="loading"
-				data-evaluated="false"
-			>
-				<Container>
-					<div className="grid gap-8 lg:gap-16 lg:grid-cols-2 lg:items-center grid-rows-[auto_1fr]">
-						{/* Content Skeleton */}
-						<div className="order-2 lg:order-1 space-y-6">
-							{/* Heading skeleton */}
-							<div className="h-12 sm:h-14 md:h-16 bg-gray-200 dark:bg-gray-700 rounded-lg w-4/5 animate-pulse" />
-							{/* Description skeleton */}
-							<div className="space-y-3">
-								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-full animate-pulse" />
-								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-5/6 animate-pulse" />
-								<div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-4/6 animate-pulse" />
-							</div>
-							{/* Button skeleton */}
-							<div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-full w-48 animate-pulse" />
-						</div>
-						{/* Image Skeleton */}
-						<div className="order-1 lg:order-2">
-							<div className="aspect-[4/3] bg-gray-200 dark:bg-gray-700 rounded-2xl animate-pulse" />
-						</div>
-					</div>
-				</Container>
-			</section>
-		)
-	}
+	// Flag evaluation status for data attributes
+	const isEvaluated = !hasExperiment ? "no-experiment" : (hasTimedOut ? "timed-out" : (flagVariant !== undefined ? "true" : "pending"))
 
 	return (
 		<section
 			className={clsx(
 				"pt-20 transition-opacity duration-300",
 				// Fade in when variant is ready (slight fade effect for smoother transition)
-				hasMounted && flagVariant !== undefined ? "opacity-100" : "opacity-95"
+				// If no experiment or timed out, always full opacity
+				!hasExperiment || hasTimedOut || (hasMounted && flagVariant !== undefined) ? "opacity-100" : "opacity-95"
 			)}
 			data-agility-component={contentID}
-			data-experiment-key={experimentKey}
+			data-experiment-key={hasExperiment ? experimentKey : undefined}
 			data-variant={selectedVariant.variant}
-			data-evaluated={hasMounted && flagVariant !== undefined ? "true" : "false"}
+			data-evaluated={isEvaluated}
 		>
 			<Container>
 				<div className={clsx(
